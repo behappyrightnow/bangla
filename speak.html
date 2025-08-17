@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bengali Learning App</title>
+    <!-- Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* A soft, light blue-gray background */
+        }
+        .container {
+            max-width: 600px;
+        }
+        .card {
+            min-height: 250px;
+        }
+        .bengali-text {
+            font-size: 7rem;
+            line-height: 1;
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 640px) {
+            .bengali-text {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white transition-colors duration-300 p-4 min-h-screen flex items-center justify-center">
+
+    <div class="w-full max-w-4xl p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl space-y-8 container">
+        <h1 class="text-3xl font-bold text-center text-gray-900 dark:text-white">Learn Bengali!</h1>
+
+        <!-- Main Display Card -->
+        <div id="card" class="card bg-gray-100 dark:bg-gray-700 rounded-xl shadow-inner p-8 flex flex-col justify-center items-center text-center">
+            <div class="flex-grow flex flex-col justify-center items-center">
+                <span id="bengali-word" class="bengali-text text-gray-900 dark:text-white mb-2"></span>
+                <p id="bengali-transliteration" class="text-2xl text-gray-700 dark:text-gray-200 mb-2"></p>
+                <p id="english-meaning" class="text-xl text-gray-600 dark:text-gray-300"></p>
+            </div>
+            <div id="loadingIndicator" class="hidden text-gray-500 dark:text-gray-400">Loading...</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button id="prevBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed">Previous</button>
+            <button id="speakBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 0 010 7.072m2.828-9.899a9 0 010 12.728M5.818 5.818a4.5 4.5 0 016.364 0L12 6.5a1.5 1.5 0 01-2.122 2.121L8 10.536V14h3.536l2.121-2.121a1.5 1.5 0 012.122 2.121l-1.414 1.414a4.5 4.5 0 01-6.364-6.364L8 8.536l-1.414-1.414z" />
+                </svg>
+                Speak
+            </button>
+            <button id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">Next</button>
+        </div>
+
+        <!-- Custom Modal UI for alerts/confirms -->
+        <div id="customModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full space-y-4">
+                <p id="modalMessage" class="text-lg font-semibold text-center text-gray-900 dark:text-white"></p>
+                <button id="modalCloseBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl transition-all duration-200">OK</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Audio Player (hidden) -->
+    <audio id="audioPlayer" class="hidden"></audio>
+
+    <script type="module">
+        // Helper functions for TTS API response handling
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const dataView = new DataView(new ArrayBuffer(44 + pcmData.byteLength));
+            let offset = 0;
+            const writeString = (str) => {
+                for (let i = 0; i < str.length; i++) {
+                    dataView.setUint8(offset + i, str.charCodeAt(i));
+                }
+                offset += str.length;
+            };
+            const writeUint32 = (val) => { dataView.setUint32(offset, val, true); offset += 4; };
+            const writeUint16 = (val) => { dataView.setUint16(offset, val, true); offset += 2; };
+
+            // RIFF header
+            writeString('RIFF');
+            writeUint32(36 + pcmData.byteLength);
+            writeString('WAVE');
+
+            // fmt chunk
+            writeString('fmt ');
+            writeUint32(16); // Chunk size
+            writeUint16(1);  // Audio format (1 = PCM)
+            writeUint16(1);  // Number of channels
+            writeUint32(sampleRate);
+            writeUint32(sampleRate * 2); // Byte rate (sampleRate * numChannels * bitsPerSample/8)
+            writeUint16(2);  // Block align (numChannels * bitsPerSample/8)
+            writeUint16(16); // Bits per sample
+
+            // data chunk
+            writeString('data');
+            writeUint32(pcmData.byteLength);
+            for (let i = 0; i < pcmData.length; i++) {
+                dataView.setInt16(offset, pcmData[i], true);
+                offset += 2;
+            }
+            return new Blob([dataView], { type: 'audio/wav' });
+        }
+        
+        // Custom modal to replace alert()
+        function showModal(message) {
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        document.getElementById('modalCloseBtn').addEventListener('click', () => {
+            document.getElementById('customModal').classList.add('hidden');
+        });
+
+        // Data for learning
+        const words = [
+            { bengali: "নমস্কার", transliteration: "Nomoshkar", english: "Hello" },
+            { bengali: "ধন্যবাদ", transliteration: "Dhonnobad", english: "Thank you" },
+            { bengali: "জল", transliteration: "Jol", english: "Water" },
+            { bengali: "ভাত", transliteration: "Bhat", english: "Rice" },
+            { bengali: "মাছ", transliteration: "Maach", english: "Fish" },
+            { bengali: "ভালোবাসা", transliteration: "Bhalobasha", english: "Love" },
+            { bengali: "বাড়ি", transliteration: "Bari", english: "House" },
+            { bengali: "বই", transliteration: "Boi", english: "Book" },
+            { bengali: "খেলা", transliteration: "Khela", english: "Play" },
+            { bengali: "গান", transliteration: "Gaan", english: "Song" }
+        ];
+
+        let currentIndex = 0;
+
+        // UI Elements
+        const bengaliWordEl = document.getElementById('bengali-word');
+        const bengaliTransliterationEl = document.getElementById('bengali-transliteration');
+        const englishMeaningEl = document.getElementById('english-meaning');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        function updateDisplay() {
+            const currentWord = words[currentIndex];
+            bengaliWordEl.textContent = currentWord.bengali;
+            bengaliTransliterationEl.textContent = `(${currentWord.transliteration})`;
+            englishMeaningEl.textContent = currentWord.english;
+
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === words.length - 1;
+        }
+
+        async function speakWord(text) {
+            speakBtn.disabled = true;
+            speakBtn.textContent = 'Speaking...';
+            loadingIndicator.classList.remove('hidden');
+            
+            try {
+                // API call with exponential backoff
+                let retries = 0;
+                const maxRetries = 5;
+                let finalResult = null;
+                
+                while (retries < maxRetries) {
+                    try {
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+                        const payload = {
+                            contents: [{
+                                // Simplifies the prompt to just the Bengali word
+                                parts: [{ text: text }]
+                            }],
+                            generationConfig: {
+                                responseModalities: ["AUDIO"],
+                                speechConfig: {
+                                    voiceConfig: {
+                                        // Changing to a different voice
+                                        prebuiltVoiceConfig: { voiceName: "Fenrir" } 
+                                    }
+                                }
+                            },
+                            model: "gemini-2.5-flash-preview-tts"
+                        };
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API response was not OK: ${response.statusText}`);
+                        }
+                        
+                        finalResult = await response.json();
+                        
+                        // Check for audio data and break if found
+                        const audioPart = finalResult?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                        if (audioPart) {
+                            break; // Success, exit the retry loop
+                        } else {
+                            // Valid response, but no audio data. Log and retry.
+                            console.warn("API response was missing audio data. Retrying...");
+                            throw new Error("No audio data found");
+                        }
+                    } catch (error) {
+                        console.error("API call failed:", error);
+                        if (retries === maxRetries - 1) {
+                            throw new Error(`Failed to generate speech after ${maxRetries} attempts.`);
+                        }
+                        const delay = Math.pow(2, retries) * 1000;
+                        console.warn(`Retrying in ${delay}ms...`);
+                        await new Promise(res => setTimeout(res, delay));
+                        retries++;
+                    }
+                }
+                
+                if (!finalResult) {
+                    throw new Error("API did not return a response after all retries.");
+                }
+
+                // Process and play the audio
+                const audioPart = finalResult.candidates[0].content.parts.find(p => p.inlineData);
+                const audioData = audioPart.inlineData.data;
+                const mimeType = audioPart.inlineData.mimeType;
+                
+                const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
+                
+                const pcmBuffer = base64ToArrayBuffer(audioData);
+                const pcm16 = new Int16Array(pcmBuffer);
+                const wavBlob = pcmToWav(pcm16, sampleRate);
+                
+                const audioUrl = URL.createObjectURL(wavBlob);
+                audioPlayer.src = audioUrl;
+                audioPlayer.play();
+                
+                audioPlayer.onended = () => {
+                    speakBtn.textContent = 'Speak';
+                    speakBtn.disabled = false;
+                };
+
+            } catch (error) {
+                console.error("Error occurred:", error);
+                showModal(`An error occurred: ${error.message}. Please try again later.`);
+            } finally {
+                // Ensure UI is reset no matter what
+                loadingIndicator.classList.add('hidden');
+                speakBtn.textContent = 'Speak';
+                speakBtn.disabled = false;
+            }
+        }
+
+        // Event Listeners
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                updateDisplay();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+            }
+        });
+
+        speakBtn.addEventListener('click', () => {
+            const currentWord = words[currentIndex].bengali;
+            speakWord(currentWord);
+        });
+
+        // Initial setup
+        window.onload = updateDisplay;
+    </script>
+</body>
+</html>
