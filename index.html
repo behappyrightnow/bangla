@@ -188,109 +188,133 @@
         let paths = [];
         let feedback = '';
 
-        // Bengali alphabet with pronunciations
+        // Bengali alphabet with pronunciations and audio filenames
         const bengaliAlphabet = [
-            { bengali: 'অ', english: 'a', pronunciation: 'aw' },
-            { bengali: 'আ', english: 'aa', pronunciation: 'ah' },
-            { bengali: 'ই', english: 'i', pronunciation: 'ee' },
-            { bengali: 'ঈ', english: 'ii', pronunciation: 'eee' },
-            { bengali: 'উ', english: 'u', pronunciation: 'oo' },
-            { bengali: 'ঊ', english: 'uu', pronunciation: 'ooo' },
-            { bengali: 'এ', english: 'e', pronunciation: 'eh' },
-            { bengali: 'ঐ', english: 'oi', pronunciation: 'oy' },
-            { bengali: 'ও', english: 'o', pronunciation: 'oh' },
-            { bengali: 'ঔ', english: 'ou', pronunciation: 'ow' },
-            { bengali: 'ক', english: 'ka', pronunciation: 'kaw' },
-            { bengali: 'খ', english: 'kha', pronunciation: 'khaw' },
-            { bengali: 'গ', english: 'ga', pronunciation: 'gaw' },
-            { bengali: 'ঘ', english: 'gha', pronunciation: 'ghaw' },
-            { bengali: 'চ', english: 'cha', pronunciation: 'chaw' },
-            { bengali: 'ছ', english: 'chha', pronunciation: 'chhaw' },
-            { bengali: 'জ', english: 'ja', pronunciation: 'jaw' },
-            { bengali: 'ঝ', english: 'jha', pronunciation: 'jhaw' },
-            { bengali: 'ট', english: 'ta', pronunciation: 'taw' },
-            { bengali: 'ঠ', english: 'tha', pronunciation: 'thaw' },
-            { bengali: 'ড', english: 'da', pronunciation: 'daw' },
-            { bengali: 'ঢ', english: 'dha', pronunciation: 'dhaw' },
-            { bengali: 'ণ', english: 'na', pronunciation: 'naw' },
-            { bengali: 'ত', english: 'ta', pronunciation: 'taw' },
-            { bengali: 'থ', english: 'tha', pronunciation: 'thaw' },
-            { bengali: 'দ', english: 'da', pronunciation: 'daw' },
-            { bengali: 'ধ', english: 'dha', pronunciation: 'dhaw' },
-            { bengali: 'ন', english: 'na', pronunciation: 'naw' },
-            { bengali: 'প', english: 'pa', pronunciation: 'paw' },
-            { bengali: 'ফ', english: 'pha', pronunciation: 'phaw' },
-            { bengali: 'ব', english: 'ba', pronunciation: 'baw' },
-            { bengali: 'ভ', english: 'bha', pronunciation: 'bhaw' },
-            { bengali: 'ম', english: 'ma', pronunciation: 'maw' },
-            { bengali: 'য', english: 'ya', pronunciation: 'yaw' },
-            { bengali: 'র', english: 'ra', pronunciation: 'raw' },
-            { bengali: 'ল', english: 'la', pronunciation: 'law' },
-            { bengali: 'শ', english: 'sha', pronunciation: 'shaw' },
-            { bengali: 'ষ', english: 'sha', pronunciation: 'shaw' },
-            { bengali: 'স', english: 'sa', pronunciation: 'saw' },
-            { bengali: 'হ', english: 'ha', pronunciation: 'haw' }
+            { bengali: 'অ', english: 'a', pronunciation: 'aw', audioFile: 'aw.mp3' },
+            { bengali: 'আ', english: 'aa', pronunciation: 'ah', audioFile: 'ah.mp3' },
+            { bengali: 'ই', english: 'i', pronunciation: 'ee', audioFile: 'ee.mp3' },
+            { bengali: 'ঈ', english: 'ii', pronunciation: 'eee', audioFile: 'eee.mp3' },
+            { bengali: 'উ', english: 'u', pronunciation: 'oo', audioFile: 'oo.mp3' },
+            { bengali: 'ঊ', english: 'uu', pronunciation: 'ooo', audioFile: 'ooo.mp3' },
+            { bengali: 'এ', english: 'e', pronunciation: 'eh', audioFile: 'eh.mp3' },
+            { bengali: 'ঐ', english: 'oi', pronunciation: 'oy', audioFile: 'oy.mp3' },
+            { bengali: 'ও', english: 'o', pronunciation: 'oh', audioFile: 'oh.mp3' },
+            { bengali: 'ঔ', english: 'ou', pronunciation: 'ow', audioFile: 'ow.mp3' },
+            { bengali: 'ক', english: 'ka', pronunciation: 'kaw', audioFile: 'kaw.mp3' },
+            { bengali: 'খ', english: 'kha', pronunciation: 'khaw', audioFile: 'khaw.mp3' },
+            { bengali: 'গ', english: 'ga', pronunciation: 'gaw', audioFile: 'gaw.mp3' },
+            { bengali: 'ঘ', english: 'gha', pronunciation: 'ghaw', audioFile: 'ghaw.mp3' },
+            { bengali: 'চ', english: 'cha', pronunciation: 'chaw', audioFile: 'chaw.mp3' },
+            { bengali: 'ছ', english: 'chha', pronunciation: 'chhaw', audioFile: 'chhaw.mp3' },
+            { bengali: 'জ', english: 'ja', pronunciation: 'jaw', audioFile: 'jaw.mp3' },
+            { bengali: 'ঝ', english: 'jha', pronunciation: 'jhaw', audioFile: 'jhaw.mp3' },
+            { bengali: 'ট', english: 'ta', pronunciation: 'taw', audioFile: 'taw.mp3' },
+            { bengali: 'ঠ', english: 'tha', pronunciation: 'thaw', audioFile: 'thaw.mp3' },
+            { bengali: 'ড', english: 'da', pronunciation: 'daw', audioFile: 'daw.mp3' },
+            { bengali: 'ঢ', english: 'dha', pronunciation: 'dhaw', audioFile: 'dhaw.mp3' },
+            { bengali: 'ণ', english: 'na', pronunciation: 'naw', audioFile: 'naw.mp3' },
+            { bengali: 'ত', english: 'ta', pronunciation: 'taw', audioFile: 'taw2.mp3' },
+            { bengali: 'থ', english: 'tha', pronunciation: 'thaw', audioFile: 'thaw2.mp3' },
+            { bengali: 'দ', english: 'da', pronunciation: 'daw', audioFile: 'daw2.mp3' },
+            { bengali: 'ধ', english: 'dha', pronunciation: 'dhaw', audioFile: 'dhaw2.mp3' },
+            { bengali: 'ন', english: 'na', pronunciation: 'naw', audioFile: 'naw2.mp3' },
+            { bengali: 'প', english: 'pa', pronunciation: 'paw', audioFile: 'paw.mp3' },
+            { bengali: 'ফ', english: 'pha', pronunciation: 'phaw', audioFile: 'phaw.mp3' },
+            { bengali: 'ব', english: 'ba', pronunciation: 'baw', audioFile: 'baw.mp3' },
+            { bengali: 'ভ', english: 'bha', pronunciation: 'bhaw', audioFile: 'bhaw.mp3' },
+            { bengali: 'ম', english: 'ma', pronunciation: 'maw', audioFile: 'maw.mp3' },
+            { bengali: 'য', english: 'ya', pronunciation: 'yaw', audioFile: 'yaw.mp3' },
+            { bengali: 'র', english: 'ra', pronunciation: 'raw', audioFile: 'raw.mp3' },
+            { bengali: 'ল', english: 'la', pronunciation: 'law', audioFile: 'law.mp3' },
+            { bengali: 'শ', english: 'sha', pronunciation: 'shaw', audioFile: 'shaw.mp3' },
+            { bengali: 'ষ', english: 'sha', pronunciation: 'shaw', audioFile: 'shaw2.mp3' },
+            { bengali: 'স', english: 'sa', pronunciation: 'saw', audioFile: 'saw.mp3' },
+            { bengali: 'হ', english: 'ha', pronunciation: 'haw', audioFile: 'haw.mp3' }
         ];
 
-        // Bengali words for children - authentic Bengali vocabulary
+        // Bengali words for children - authentic Bengali vocabulary with audio filenames
         const bengaliWords = [
-            { bengali: 'মা', english: 'Mother', transliteration: 'maa' },
-            { bengali: 'বাবা', english: 'Father', transliteration: 'baba' },
-            { bengali: 'জল', english: 'Water', transliteration: 'jol' },
-            { bengali: 'বই', english: 'Book', transliteration: 'boi' },
-            { bengali: 'বাড়ি', english: 'House', transliteration: 'baari' },
-            { bengali: 'গাড়ি', english: 'Car', transliteration: 'gaari' },
-            { bengali: 'ফুল', english: 'Flower', transliteration: 'phul' },
-            { bengali: 'চাঁদ', english: 'Moon', transliteration: 'chaand' },
-            { bengali: 'সূর্য', english: 'Sun', transliteration: 'shurjo' },
-            { bengali: 'মাছ', english: 'Fish', transliteration: 'maach' },
-            { bengali: 'পাখি', english: 'Bird', transliteration: 'pakhi' },
-            { bengali: 'হাত', english: 'Hand', transliteration: 'haat' },
-            { bengali: 'চোখ', english: 'Eye', transliteration: 'chokh' },
-            { bengali: 'নাম', english: 'Name', transliteration: 'naam' },
-            { bengali: 'ভাত', english: 'Rice', transliteration: 'bhaat' },
-            { bengali: 'দুধ', english: 'Milk', transliteration: 'dudh' },
-            { bengali: 'মিষ্টি', english: 'Sweet', transliteration: 'mishti' },
-            { bengali: 'আম', english: 'Mango', transliteration: 'aam' },
-            { bengali: 'কলা', english: 'Banana', transliteration: 'kola' },
-            { bengali: 'বিড়াল', english: 'Cat', transliteration: 'biraal' }
+            { bengali: 'মা', english: 'Mother', transliteration: 'maa', audioFile: 'maa.mp3' },
+            { bengali: 'বাবা', english: 'Father', transliteration: 'baba', audioFile: 'baba.mp3' },
+            { bengali: 'জল', english: 'Water', transliteration: 'jol', audioFile: 'jol.mp3' },
+            { bengali: 'বই', english: 'Book', transliteration: 'boi', audioFile: 'boi.mp3' },
+            { bengali: 'বাড়ি', english: 'House', transliteration: 'baari', audioFile: 'baari.mp3' },
+            { bengali: 'গাড়ি', english: 'Car', transliteration: 'gaari', audioFile: 'gaari.mp3' },
+            { bengali: 'ফুল', english: 'Flower', transliteration: 'phul', audioFile: 'phul.mp3' },
+            { bengali: 'চাঁদ', english: 'Moon', transliteration: 'chaand', audioFile: 'chaand.mp3' },
+            { bengali: 'সূর্য', english: 'Sun', transliteration: 'shurjo', audioFile: 'shurjo.mp3' },
+            { bengali: 'মাছ', english: 'Fish', transliteration: 'maach', audioFile: 'maach.mp3' },
+            { bengali: 'পাখি', english: 'Bird', transliteration: 'pakhi', audioFile: 'pakhi.mp3' },
+            { bengali: 'হাত', english: 'Hand', transliteration: 'haat', audioFile: 'haat.mp3' },
+            { bengali: 'চোখ', english: 'Eye', transliteration: 'chokh', audioFile: 'chokh.mp3' },
+            { bengali: 'নাম', english: 'Name', transliteration: 'naam', audioFile: 'naam.mp3' },
+            { bengali: 'ভাত', english: 'Rice', transliteration: 'bhaat', audioFile: 'bhaat.mp3' },
+            { bengali: 'দুধ', english: 'Milk', transliteration: 'dudh', audioFile: 'dudh.mp3' },
+            { bengali: 'মিষ্টি', english: 'Sweet', transliteration: 'mishti', audioFile: 'mishti.mp3' },
+            { bengali: 'আম', english: 'Mango', transliteration: 'aam', audioFile: 'aam.mp3' },
+            { bengali: 'কলা', english: 'Banana', transliteration: 'kola', audioFile: 'kola.mp3' },
+            { bengali: 'বিড়াল', english: 'Cat', transliteration: 'biraal', audioFile: 'biraal.mp3' }
         ];
 
-        // Text-to-speech function with better error handling
-        function speakText(text, lang = 'bn-BD') {
+        // Audio playback functions for pre-recorded files
+        function playBengaliAudio(audioFile, type = 'letter') {
+            const audioPath = type === 'letter' ? `audio/letters/${audioFile}` : `audio/words/${audioFile}`;
+            const audio = new Audio(audioPath);
+            
+            audio.oncanplay = () => {
+                showFeedback('🔊 Playing Bengali audio...');
+                setTimeout(() => hideFeedback(), 2000);
+            };
+            
+            audio.onerror = (error) => {
+                console.error('Audio file not found:', audioPath);
+                showFeedback(`Audio file not found: ${audioFile}`);
+                setTimeout(() => hideFeedback(), 3000);
+            };
+            
+            audio.onended = () => {
+                // Audio finished playing
+            };
+            
+            audio.play().catch(error => {
+                console.error('Error playing audio:', error);
+                showFeedback('Could not play audio file');
+                setTimeout(() => hideFeedback(), 3000);
+            });
+        }
+
+        // Text-to-speech function for English fallbacks (simplified)
+        function speakEnglishText(text) {
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
                 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = lang;
-                utterance.rate = 0.7;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
                 utterance.pitch = 1;
                 utterance.volume = 1;
                 
-                utterance.onerror = (event) => {
-                    console.error('Speech synthesis error:', event);
-                    showFeedback('Audio not available - please check your device settings');
-                };
-                
                 utterance.onstart = () => {
-                    showFeedback('🔊 Playing audio...');
+                    showFeedback('🔊 Playing English audio...');
                     setTimeout(() => hideFeedback(), 2000);
                 };
                 
-                const bengaliLangs = ['bn-BD', 'bn-IN', 'bn', 'hi-IN', 'en-US'];
-                let langIndex = 0;
-                
-                const trySpeak = () => {
-                    if (langIndex < bengaliLangs.length) {
-                        utterance.lang = bengaliLangs[langIndex];
-                        speechSynthesis.speak(utterance);
-                        langIndex++;
-                    }
+                utterance.onerror = (event) => {
+                    console.error('Speech synthesis error:', event);
+                    showFeedback('English audio not available');
+                    setTimeout(() => hideFeedback(), 3000);
                 };
                 
-                trySpeak();
+                try {
+                    speechSynthesis.speak(utterance);
+                } catch (error) {
+                    console.error('Speech error:', error);
+                    showFeedback('Text-to-speech not supported');
+                    setTimeout(() => hideFeedback(), 3000);
+                }
             } else {
-                showFeedback('Audio not supported on this device');
+                showFeedback('Text-to-speech not supported on this device');
+                setTimeout(() => hideFeedback(), 3000);
             }
         }
 
@@ -511,13 +535,13 @@
                                 <div class="text-8xl font-bold text-white mb-4">${letter.bengali}</div>
                                 <div class="text-2xl text-white mb-2">Pronunciation: ${letter.pronunciation}</div>
                                 <div class="flex justify-center space-x-4">
-                                    <button onclick="speakText('${letter.bengali}')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play pronunciation">
+                                    <button onclick="playBengaliAudio('${letter.audioFile}', 'letter')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
                                         <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="m7 4 10 8L7 20V4z"/>
                                         </svg>
-                                        <span class="hidden sm:inline">Play Audio</span>
+                                        <span class="hidden sm:inline">Bengali</span>
                                     </button>
-                                    <button onclick="speakText('${letter.pronunciation}', 'en-US')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English pronunciation guide">
+                                    <button onclick="speakEnglishText('${letter.pronunciation}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English pronunciation guide">
                                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="m7 4 10 8L7 20V4z"/>
                                         </svg>
@@ -580,19 +604,19 @@
                                 <div class="text-2xl text-white mb-2">${word.english}</div>
                                 <div class="text-xl text-white/80 mb-4">(${word.transliteration})</div>
                                 <div class="flex justify-center space-x-4">
-                                    <button onclick="speakText('${word.bengali}')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
+                                    <button onclick="playBengaliAudio('${word.audioFile}', 'word')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
                                         <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="m7 4 10 8L7 20V4z"/>
                                         </svg>
                                         <span class="hidden sm:inline">Bengali</span>
                                     </button>
-                                    <button onclick="speakText('${word.english}', 'en-US')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English translation">
+                                    <button onclick="speakEnglishText('${word.english}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English translation">
                                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="m7 4 10 8L7 20V4z"/>
                                         </svg>
                                         <span class="text-sm">English</span>
                                     </button>
-                                    <button onclick="speakText('${word.transliteration}', 'en-US')" class="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play transliteration guide">
+                                    <button onclick="speakEnglishText('${word.transliteration}')" class="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play transliteration guide">
                                         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="m7 4 10 8L7 20V4z"/>
                                         </svg>
