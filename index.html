@@ -296,11 +296,12 @@
 
         // Drawing functions
         function startDrawing(e) {
+            e.preventDefault();
             isDrawing = true;
-            const canvas = document.getElementById('drawingCanvas');
+            const canvas = document.querySelector('.drawing-canvas');
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             currentPath = `M ${x} ${y}`;
             hideFeedback();
         }
@@ -308,22 +309,24 @@
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
-            const canvas = document.getElementById('drawingCanvas');
+            const canvas = document.querySelector('.drawing-canvas');
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
             currentPath += ` L ${x} ${y}`;
             updateCanvas();
         }
 
-        function stopDrawing() {
-            if (isDrawing) {
-                isDrawing = false;
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            isDrawing = false;
+            if (currentPath.length > 0) {
                 paths.push(currentPath);
-                currentPath = '';
-                updateCanvas();
-                provideFeedback();
             }
+            currentPath = '';
+            updateCanvas();
+            provideFeedback();
         }
 
         function clearCanvas() {
@@ -338,11 +341,16 @@
             if (!canvas) return;
             
             let pathsHTML = '';
+            
+            // Draw completed paths
             paths.forEach(path => {
-                pathsHTML += `<path d="${path}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+                if (path && path.length > 0) {
+                    pathsHTML += `<path d="${path}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+                }
             });
             
-            if (currentPath) {
+            // Draw current path being drawn
+            if (currentPath && currentPath.length > 0) {
                 pathsHTML += `<path d="${currentPath}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
             }
             
@@ -537,11 +545,12 @@
                                 <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas" 
                                      onmousedown="startDrawing(event)" 
                                      onmousemove="draw(event)" 
-                                     onmouseup="stopDrawing()" 
+                                     onmouseup="stopDrawing(event)"
+                                     onmouseleave="stopDrawing(event)"
                                      ontouchstart="startDrawing(event)" 
                                      ontouchmove="draw(event)" 
-                                     ontouchend="stopDrawing()">
-                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-8xl font-bold fill-gray-300" style="font-size: 120px;">
+                                     ontouchend="stopDrawing(event)">
+                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-8xl font-bold fill-gray-300" style="font-size: 120px; pointer-events: none;">
                                         ${letter.bengali}
                                     </text>
                                     <g id="drawingCanvas"></g>
@@ -611,11 +620,12 @@
                                 <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas" 
                                      onmousedown="startDrawing(event)" 
                                      onmousemove="draw(event)" 
-                                     onmouseup="stopDrawing()" 
+                                     onmouseup="stopDrawing(event)"
+                                     onmouseleave="stopDrawing(event)"
                                      ontouchstart="startDrawing(event)" 
                                      ontouchmove="draw(event)" 
-                                     ontouchend="stopDrawing()">
-                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-6xl font-bold fill-gray-300" style="font-size: 80px;">
+                                     ontouchend="stopDrawing(event)">
+                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-6xl font-bold fill-gray-300" style="font-size: 80px; pointer-events: none;">
                                         ${word.bengali}
                                     </text>
                                     <g id="drawingCanvas"></g>
