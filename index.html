@@ -442,6 +442,47 @@
             render();
         }
 
+        // Navigation helper functions
+        function goToNextLetter() {
+            if (selectedLetter) {
+                const currentIndex = bengaliAlphabet.findIndex(letter => letter.bengali === selectedLetter.bengali);
+                const nextIndex = (currentIndex + 1) % bengaliAlphabet.length; // Loop back to first
+                selectedLetter = bengaliAlphabet[nextIndex];
+                clearCanvas();
+                render();
+            }
+        }
+
+        function goToPreviousLetter() {
+            if (selectedLetter) {
+                const currentIndex = bengaliAlphabet.findIndex(letter => letter.bengali === selectedLetter.bengali);
+                const prevIndex = currentIndex === 0 ? bengaliAlphabet.length - 1 : currentIndex - 1; // Loop to last
+                selectedLetter = bengaliAlphabet[prevIndex];
+                clearCanvas();
+                render();
+            }
+        }
+
+        function goToNextWord() {
+            if (selectedWord) {
+                const currentIndex = bengaliWords.findIndex(word => word.bengali === selectedWord.bengali);
+                const nextIndex = (currentIndex + 1) % bengaliWords.length; // Loop back to first
+                selectedWord = bengaliWords[nextIndex];
+                clearCanvas();
+                render();
+            }
+        }
+
+        function goToPreviousWord() {
+            if (selectedWord) {
+                const currentIndex = bengaliWords.findIndex(word => word.bengali === selectedWord.bengali);
+                const prevIndex = currentIndex === 0 ? bengaliWords.length - 1 : currentIndex - 1; // Loop to last
+                selectedWord = bengaliWords[prevIndex];
+                clearCanvas();
+                render();
+            }
+        }
+
         // Render functions
         function renderHomeScreen() {
             return `
@@ -450,14 +491,14 @@
                         <h1 class="text-4xl font-bold text-white mb-4">Bengali Learning</h1>
                         <p class="text-xl text-white/90">Learn Bengali letters and words!</p>
                     </div>
-                    
+
                     <div class="flex flex-col items-center space-y-6 max-w-md mx-auto">
                         <button onclick="setMode('letters')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
                             <div class="text-4xl mb-2">অ আ ই</div>
                             <div class="text-xl font-semibold">Learn Letters</div>
                             <div class="text-sm opacity-80">Practice Bengali alphabet</div>
                         </button>
-                        
+
                         <button onclick="setMode('words')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
                             <div class="text-4xl mb-2">মা বাবা</div>
                             <div class="text-xl font-semibold">Learn Words</div>
@@ -472,7 +513,7 @@
             if (selectedLetter) {
                 return renderLetterPractice(selectedLetter);
             }
-            
+
             return `
                 <div class="min-h-screen gradient-bg-2 p-4">
                     <div class="flex items-center justify-between mb-6">
@@ -500,7 +541,7 @@
             if (selectedWord) {
                 return renderWordPractice(selectedWord);
             }
-            
+
             return `
                 <div class="min-h-screen gradient-bg-3 p-4">
                     <div class="flex items-center justify-between mb-6">
@@ -527,9 +568,23 @@
         }
 
         function renderLetterPractice(letter) {
+            const currentIndex = bengaliAlphabet.findIndex(l => l.bengali === letter.bengali);
+            const isFirst = currentIndex === 0;
+            const isLast = currentIndex === bengaliAlphabet.length - 1;
+
             return `
                 <div class="min-h-screen gradient-bg-2 p-4">
                     <div class="max-w-4xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                </svg>
+                            </button>
+                            <h2 class="text-2xl font-bold text-white">Letter ${currentIndex + 1} of ${bengaliAlphabet.length}</h2>
+                            <div class="w-12"></div>
+                        </div>
+
                         <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
                             <div class="text-center mb-6">
                                 <div class="text-8xl font-bold text-white mb-4">${letter.bengali}</div>
@@ -566,26 +621,40 @@
                             </div>
 
                             <div class="relative">
-                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas" 
-                                     onmousedown="startDrawing(event)" 
-                                     onmousemove="draw(event)" 
+                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
+                                     onmousedown="startDrawing(event)"
+                                     onmousemove="draw(event)"
                                      onmouseup="stopDrawing(event)"
                                      onmouseleave="stopDrawing(event)"
-                                     ontouchstart="startDrawing(event)" 
-                                     ontouchmove="draw(event)" 
+                                     ontouchstart="startDrawing(event)"
+                                     ontouchmove="draw(event)"
                                      ontouchend="stopDrawing(event)">
                                     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-8xl font-bold fill-gray-300" style="font-size: 120px; pointer-events: none;">
                                         ${letter.bengali}
                                     </text>
                                     <g id="drawingCanvas"></g>
                                 </svg>
-                                
+
                                 <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display: none;"></div>
                             </div>
 
-                            <div class="text-center mt-4">
+                            <div class="flex justify-between items-center mt-6">
+                                <button onclick="goToPreviousLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Previous letter">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="m15 18-6-6 6-6"/>
+                                    </svg>
+                                    <span>Previous</span>
+                                </button>
+
                                 <button onclick="goBack()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all">
                                     Back to Letters
+                                </button>
+
+                                <button onclick="goToNextLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Next letter">
+                                    <span>Next</span>
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="m9 18 6-6-6-6"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -595,9 +664,23 @@
         }
 
         function renderWordPractice(word) {
+            const currentIndex = bengaliWords.findIndex(w => w.bengali === word.bengali);
+            const isFirst = currentIndex === 0;
+            const isLast = currentIndex === bengaliWords.length - 1;
+
             return `
                 <div class="min-h-screen gradient-bg-3 p-4">
                     <div class="max-w-4xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                </svg>
+                            </button>
+                            <h2 class="text-2xl font-bold text-white">Word ${currentIndex + 1} of ${bengaliWords.length}</h2>
+                            <div class="w-12"></div>
+                        </div>
+
                         <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
                             <div class="text-center mb-6">
                                 <div class="text-6xl font-bold text-white mb-4">${word.bengali}</div>
@@ -641,26 +724,40 @@
                             </div>
 
                             <div class="relative">
-                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas" 
-                                     onmousedown="startDrawing(event)" 
-                                     onmousemove="draw(event)" 
+                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
+                                     onmousedown="startDrawing(event)"
+                                     onmousemove="draw(event)"
                                      onmouseup="stopDrawing(event)"
                                      onmouseleave="stopDrawing(event)"
-                                     ontouchstart="startDrawing(event)" 
-                                     ontouchmove="draw(event)" 
+                                     ontouchstart="startDrawing(event)"
+                                     ontouchmove="draw(event)"
                                      ontouchend="stopDrawing(event)">
                                     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-6xl font-bold fill-gray-300" style="font-size: 80px; pointer-events: none;">
                                         ${word.bengali}
                                     </text>
                                     <g id="drawingCanvas"></g>
                                 </svg>
-                                
+
                                 <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display: none;"></div>
                             </div>
 
-                            <div class="text-center mt-4">
+                            <div class="flex justify-between items-center mt-6">
+                                <button onclick="goToPreviousWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Previous word">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="m15 18-6-6 6-6"/>
+                                    </svg>
+                                    <span>Previous</span>
+                                </button>
+
                                 <button onclick="goBack()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full font-semibold transition-all">
                                     Back to Words
+                                </button>
+
+                                <button onclick="goToNextWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Next word">
+                                    <span>Next</span>
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="m9 18 6-6-6-6"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
