@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bengali Word Recorder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .word-display {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e1e8ff;
+        }
+
+        .bengali-word {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-family: 'SolaimanLipi', 'Kalpurush', 'Mukti Narrow', serif;
+        }
+
+        .transliteration {
+            font-size: 2em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .english-meaning {
+            font-size: 1.2em;
+            color: #718096;
+        }
+
+        .progress {
+            font-size: 1em;
+            color: #9ca3af;
+            margin-top: 15px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .recording-controls {
+            background: #fff5f5;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #fed7d7;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .record-btn {
+            background: #f56565;
+            color: white;
+        }
+
+        .record-btn:hover {
+            background: #e53e3e;
+            transform: scale(1.05);
+        }
+
+        .record-btn.recording {
+            background: #e53e3e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .play-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            background: #38a169;
+            transform: scale(1.05);
+        }
+
+        .play-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .status {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .status.ready { background: #c6f6d5; color: #22543d; }
+        .status.recording { background: #fed7d7; color: #742a2a; }
+        .status.saved { background: #bee3f8; color: #2a4365; }
+        .status.playing { background: #e9d8fd; color: #44337a; }
+
+        .download-section {
+            background: #f0fff4;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #c6f6d5;
+        }
+
+        .download-btn {
+            background: #38a169;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+        }
+
+        .download-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .completion-stats {
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: #2d3748;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .bengali-word {
+                font-size: 2.5em;
+            }
+
+            .transliteration {
+                font-size: 1.5em;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bengali Word Recorder</h1>
+        </div>
+
+        <div class="word-display">
+            <div class="bengali-word" id="bengaliWord">মা</div>
+            <div class="transliteration" id="transliteration">maa</div>
+            <div class="english-meaning" id="englishMeaning">(Mother)</div>
+            <div class="progress" id="progress">1 of 20</div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" onclick="previousWord()">◀ Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="nextWord()">Next ▶</button>
+        </div>
+
+        <div class="recording-controls">
+            <div class="control-buttons">
+                <button class="control-btn record-btn" id="recordBtn" onclick="toggleRecording()">🔴 Record</button>
+                <button class="control-btn play-btn" id="playBtn" onclick="playRecording()" disabled>▶ Play</button>
+            </div>
+            <div class="status ready" id="status">Ready to record</div>
+        </div>
+
+        <div class="download-section">
+            <button class="download-btn" id="downloadBtn" onclick="downloadAllRecordings()">📦 Download All Recordings</button>
+            <div class="completion-stats" id="completionStats">0 of 20 words recorded</div>
+        </div>
+
+        <div id="errorMsg"></div>
+    </div>
+
+    <script>
+        const bengaliWords = [
+  {
+    "bengali": "উ",
+    "english": "U (a Bengali vowel)",
+    "transliteration": "u",
+    "audioFile": "u.wav"
+  },
+  {
+    "bengali": "উ-কার",
+    "english": "U-kar (the diacritical mark for the vowel 'u')",
+    "transliteration": "u-kar",
+    "audioFile": "u-kar.wav"
+  },
+  {
+    "bengali": "বানান",
+    "english": "spelling",
+    "transliteration": "banan",
+    "audioFile": "banan.wav"
+  },
+  {
+    "bengali": "করে",
+    "english": "by doing",
+    "transliteration": "kore",
+    "audioFile": "kore.wav"
+  },
+  {
+    "bengali": "পড়ো",
+    "english": "read",
+    "transliteration": "poṛo",
+    "audioFile": "poṛo.wav"
+  },
+  {
+    "bengali": "বউ",
+    "english": "wife",
+    "transliteration": "bou",
+    "audioFile": "bou.wav"
+  },
+  {
+    "bengali": "উই",
+    "english": "termite",
+    "transliteration": "ui",
+    "audioFile": "ui.wav"
+  },
+  {
+    "bengali": "উট",
+    "english": "camel",
+    "transliteration": "uṭ",
+    "audioFile": "uṭ.wav"
+  },
+  {
+    "bengali": "ফুল",
+    "english": "flower",
+    "transliteration": "phul",
+    "audioFile": "phul.wav"
+  },
+  {
+    "bengali": "কুকুর",
+    "english": "dog",
+    "transliteration": "kukur",
+    "audioFile": "kukur.wav"
+  },
+  {
+    "bengali": "পুতুল",
+    "english": "doll",
+    "transliteration": "putul",
+    "audioFile": "putul.wav"
+  },
+  {
+    "bengali": "মুখ",
+    "english": "face",
+    "transliteration": "mukh",
+    "audioFile": "mukh.wav"
+  },
+  {
+    "bengali": "সবুজ",
+    "english": "green",
+    "transliteration": "sobuj",
+    "audioFile": "sobuj.wav"
+  },
+  {
+    "bengali": "নতুন",
+    "english": "new",
+    "transliteration": "notun",
+    "audioFile": "notun.wav"
+  },
+  {
+    "bengali": "সুখ",
+    "english": "happiness",
+    "transliteration": "sukh",
+    "audioFile": "sukh.wav"
+  },
+  {
+    "bengali": "বকুল",
+    "english": "bakul flower",
+    "transliteration": "bokul",
+    "audioFile": "bokul.wav"
+  },
+  {
+    "bengali": "ডুমুর",
+    "english": "fig",
+    "transliteration": "ḍumur",
+    "audioFile": "ḍumur.wav"
+  },
+  {
+    "bengali": "বুক",
+    "english": "chest",
+    "transliteration": "buk",
+    "audioFile": "buk.wav"
+  },
+  {
+    "bengali": "মুকুল",
+    "english": "blossom",
+    "transliteration": "mukul",
+    "audioFile": "mukul.wav"
+  },
+  {
+    "bengali": "পুকুর",
+    "english": "pond",
+    "transliteration": "pukur",
+    "audioFile": "pukur.wav"
+  },
+  {
+    "bengali": "চুল",
+    "english": "hair",
+    "transliteration": "cul",
+    "audioFile": "cul.wav"
+  },
+  {
+    "bengali": "কুয়াশা",
+    "english": "fog",
+    "transliteration": "kuyaśa",
+    "audioFile": "kuyaśa.wav"
+  },
+  {
+    "bengali": "সুপারি",
+    "english": "betel nut",
+    "transliteration": "supari",
+    "audioFile": "supari.wav"
+  },
+  {
+    "bengali": "দুল",
+    "english": "earring",
+    "transliteration": "dul",
+    "audioFile": "dul.wav"
+  },
+  {
+    "bengali": "দুয়ার",
+    "english": "door",
+    "transliteration": "duyar",
+    "audioFile": "duyar.wav"
+  },
+  {
+    "bengali": "দুপুর",
+    "english": "afternoon",
+    "transliteration": "dupur",
+    "audioFile": "dupur.wav"
+  },
+  {
+    "bengali": "গাছ",
+    "english": "tree",
+    "transliteration": "gach",
+    "audioFile": "gach.wav"
+  },
+  {
+    "bengali": "ভরা",
+    "english": "full of",
+    "transliteration": "bhora",
+    "audioFile": "bhora.wav"
+  },
+  {
+    "bengali": "রঙিন",
+    "english": "colorful",
+    "transliteration": "roṅin",
+    "audioFile": "roṅin.wav"
+  },
+  {
+    "bengali": "মালী",
+    "english": "gardener",
+    "transliteration": "mali",
+    "audioFile": "mali.wav"
+  },
+  {
+    "bengali": "জল",
+    "english": "water",
+    "transliteration": "jol",
+    "audioFile": "jol.wav"
+  },
+  {
+    "bengali": "দিল",
+    "english": "gave",
+    "transliteration": "dil",
+    "audioFile": "dil.wav"
+  },
+  {
+    "bengali": "ভীম",
+    "english": "Bhim (a name)",
+    "transliteration": "bhim",
+    "audioFile": "bhim.wav"
+  },
+  {
+    "bengali": "সাজি",
+    "english": "basket",
+    "transliteration": "saji",
+    "audioFile": "saji.wav"
+  },
+  {
+    "bengali": "লাল",
+    "english": "red",
+    "transliteration": "lal",
+    "audioFile": "lal.wav"
+  },
+  {
+    "bengali": "নীল",
+    "english": "blue",
+    "transliteration": "nil",
+    "audioFile": "nil.wav"
+  },
+  {
+    "bengali": "আর",
+    "english": "and",
+    "transliteration": "ar",
+    "audioFile": "ar.wav"
+  },
+  {
+    "bengali": "হলুদ",
+    "english": "yellow",
+    "transliteration": "holud",
+    "audioFile": "holud.wav"
+  },
+  {
+    "bengali": "তুলল",
+    "english": "picked up",
+    "transliteration": "tullol",
+    "audioFile": "tullol.wav"
+  },
+  {
+    "bengali": "বাড়ির",
+    "english": "of the house",
+    "transliteration": "baṛir",
+    "audioFile": "baṛir.wav"
+  },
+  {
+    "bengali": "ফুলদানি",
+    "english": "flower vase",
+    "transliteration": "phuldani",
+    "audioFile": "phuldani.wav"
+  },
+  {
+    "bengali": "সাজাল",
+    "english": "decorated",
+    "transliteration": "sajal",
+    "audioFile": "sajal.wav"
+  },
+  {
+    "bengali": "সবাই",
+    "english": "everyone",
+    "transliteration": "sobai",
+    "audioFile": "sobai.wav"
+  },
+  {
+    "bengali": "খুশি",
+    "english": "happy",
+    "transliteration": "khuśi",
+    "audioFile": "khuśi.wav"
+  },
+  {
+    "bengali": "হল",
+    "english": "became",
+    "transliteration": "holo",
+    "audioFile": "holo.wav"
+  }
+];
+
+        let currentWordIndex = 0;
+        let mediaRecorder = null;
+        let isRecording = false;
+        let audioChunks = [];
+        let recordings = new Map(); // Store recordings in memory
+        let currentAudio = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWordDisplay();
+            requestMicrophoneAccess();
+        });
+
+        async function requestMicrophoneAccess() {
+            try {
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('getUserMedia not supported');
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    }
+                });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream for now
+                showStatus('Ready to record', 'ready');
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                let errorMessage = 'Microphone access failed. ';
+
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Please allow microphone access and reload the page.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage += 'Your browser does not support audio recording.';
+                } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                    errorMessage += 'Audio recording requires HTTPS or localhost.';
+                } else {
+                    errorMessage += `Error: ${error.message}`;
+                }
+
+                showError(errorMessage);
+            }
+        }
+
+        function updateWordDisplay() {
+            const word = bengaliWords[currentWordIndex];
+            document.getElementById('bengaliWord').textContent = word.bengali;
+            document.getElementById('transliteration').textContent = word.transliteration;
+            document.getElementById('englishMeaning').textContent = `(${word.english})`;
+            document.getElementById('progress').textContent = `${currentWordIndex + 1} of ${bengaliWords.length}`;
+
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentWordIndex === 0;
+            document.getElementById('nextBtn').disabled = currentWordIndex === bengaliWords.length - 1;
+
+            // Update play button
+            updatePlayButtonState();
+            updateCompletionStats();
+        }
+
+        function updatePlayButtonState() {
+            const word = bengaliWords[currentWordIndex];
+            const hasRecording = recordings.has(word.transliteration);
+            document.getElementById('playBtn').disabled = !hasRecording;
+        }
+
+        function updateCompletionStats() {
+            const recordedCount = recordings.size;
+            document.getElementById('completionStats').textContent =
+                `${recordedCount} of ${bengaliWords.length} words recorded`;
+
+            document.getElementById('downloadBtn').disabled = recordedCount === 0;
+        }
+
+        function previousWord() {
+            if (currentWordIndex > 0) {
+                currentWordIndex--;
+                updateWordDisplay();
+            }
+        }
+
+        function nextWord() {
+            if (currentWordIndex < bengaliWords.length - 1) {
+                currentWordIndex++;
+                updateWordDisplay();
+            }
+        }
+
+        async function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                // Check browser support
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Your browser does not support audio recording');
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    }
+                });
+
+                // Check MediaRecorder support
+                if (!MediaRecorder.isTypeSupported('audio/webm') &&
+                    !MediaRecorder.isTypeSupported('audio/mp4') &&
+                    !MediaRecorder.isTypeSupported('audio/wav')) {
+                    throw new Error('Your browser does not support audio recording');
+                }
+
+                // Choose the best supported format
+                let mimeType = 'audio/webm';
+                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    mimeType = 'audio/webm;codecs=opus';
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+                    mimeType = 'audio/wav';
+                }
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    const word = bengaliWords[currentWordIndex];
+                    recordings.set(word.transliteration, audioBlob);
+
+                    stream.getTracks().forEach(track => track.stop());
+                    showStatus('Recording saved!', 'saved');
+                    updatePlayButtonState();
+                    updateCompletionStats();
+                };
+
+                mediaRecorder.onerror = (event) => {
+                    console.error('MediaRecorder error:', event.error);
+                    showError('Recording failed: ' + event.error.message);
+                    stream.getTracks().forEach(track => track.stop());
+                    resetRecordingState();
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                document.getElementById('recordBtn').textContent = '⏹ Stop Recording';
+                document.getElementById('recordBtn').classList.add('recording');
+                showStatus('Recording...', 'recording');
+
+            } catch (error) {
+                console.error('Start recording error:', error);
+                let errorMessage = 'Failed to start recording. ';
+
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Please allow microphone access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No microphone found.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage += 'Your browser does not support audio recording.';
+                } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                    errorMessage += 'Audio recording requires HTTPS or localhost.';
+                } else {
+                    errorMessage += error.message;
+                }
+
+                showError(errorMessage);
+                resetRecordingState();
+            }
+        }
+
+        function resetRecordingState() {
+            isRecording = false;
+            document.getElementById('recordBtn').textContent = '🔴 Record';
+            document.getElementById('recordBtn').classList.remove('recording');
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                resetRecordingState();
+            }
+        }
+
+        function playRecording() {
+            const word = bengaliWords[currentWordIndex];
+            const audioBlob = recordings.get(word.transliteration);
+
+            if (audioBlob) {
+                // Stop current audio if playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
+                const audioUrl = URL.createObjectURL(audioBlob);
+                currentAudio = new Audio(audioUrl);
+
+                currentAudio.onplay = () => {
+                    showStatus('Playing...', 'playing');
+                };
+
+                currentAudio.onended = () => {
+                    showStatus('Ready to record', 'ready');
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                currentAudio.onerror = () => {
+                    showError('Failed to play recording');
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                currentAudio.play();
+            }
+        }
+
+        async function downloadAllRecordings() {
+            if (recordings.size === 0) {
+                showError('No recordings to download');
+                return;
+            }
+
+            try {
+                showStatus('Preparing download...', 'ready');
+
+                const zip = new JSZip();
+                const audioFolder = zip.folder('audio').folder('words');
+
+                // Convert recordings to MP3-like format (actually WAV with MP3 extension for simplicity)
+                for (const [transliteration, audioBlob] of recordings) {
+                    audioFolder.file(`${transliteration}.wav`, audioBlob);
+                }
+
+                // Generate and download the ZIP file
+                const content = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(content);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bengali-word-recordings.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showStatus('Download complete!', 'saved');
+
+            } catch (error) {
+                showError('Failed to create download. Please try again.');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            clearError();
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMsg');
+            errorElement.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function clearError() {
+            document.getElementById('errorMsg').innerHTML = '';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+            switch(event.key) {
+                case 'ArrowLeft':
+                    previousWord();
+                    break;
+                case 'ArrowRight':
+                    nextWord();
+                    break;
+                case ' ':
+                    event.preventDefault();
+                    toggleRecording();
+                    break;
+                case 'Enter':
+                    if (recordings.has(bengaliWords[currentWordIndex].transliteration)) {
+                        playRecording();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
