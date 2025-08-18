@@ -508,7 +508,7 @@
 
         // Audio playback functions for pre-recorded files
         function playBengaliAudio(audioFile, type = 'letter') {
-            const audioPath = type === 'letter' ? `audio/letters/${audioFile}` : `audio/words/${audioFile}`;
+            const audioPath = type === 'letter' ? `audio/letters/${audioFile}` : `audio/p21/${audioFile}`;
             const audio = new Audio(audioPath);
             
             audio.oncanplay = () => {
