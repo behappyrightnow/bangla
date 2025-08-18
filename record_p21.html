@@ -310,7 +310,7 @@
     "bengali": "পড়ো",
     "english": "read",
     "transliteration": "poṛo",
-    "audioFile": "poṛo.wav"
+    "audioFile": "poro.wav"
   },
   {
     "bengali": "বউ",
@@ -328,7 +328,7 @@
     "bengali": "উট",
     "english": "camel",
     "transliteration": "uṭ",
-    "audioFile": "uṭ.wav"
+    "audioFile": "ut.wav"
   },
   {
     "bengali": "ফুল",
@@ -412,7 +412,7 @@
     "bengali": "কুয়াশা",
     "english": "fog",
     "transliteration": "kuyaśa",
-    "audioFile": "kuyaśa.wav"
+    "audioFile": "kuyasa.wav"
   },
   {
     "bengali": "সুপারি",
@@ -453,8 +453,8 @@
   {
     "bengali": "রঙিন",
     "english": "colorful",
-    "transliteration": "roṅin",
-    "audioFile": "roṅin.wav"
+    "transliteration": "roṅgin",
+    "audioFile": "rongin.wav"
   },
   {
     "bengali": "মালী",
@@ -471,8 +471,8 @@
   {
     "bengali": "দিল",
     "english": "gave",
-    "transliteration": "dil",
-    "audioFile": "dil.wav"
+    "transliteration": "dilo",
+    "audioFile": "dilo.wav"
   },
   {
     "bengali": "ভীম",
@@ -513,8 +513,8 @@
   {
     "bengali": "তুলল",
     "english": "picked up",
-    "transliteration": "tullol",
-    "audioFile": "tullol.wav"
+    "transliteration": "tull-lo",
+    "audioFile": "tulllo.wav"
   },
   {
     "bengali": "বাড়ির",
@@ -531,8 +531,8 @@
   {
     "bengali": "সাজাল",
     "english": "decorated",
-    "transliteration": "sajal",
-    "audioFile": "sajal.wav"
+    "transliteration": "sajalo",
+    "audioFile": "sajalo.wav"
   },
   {
     "bengali": "সবাই",
@@ -544,7 +544,7 @@
     "bengali": "খুশি",
     "english": "happy",
     "transliteration": "khuśi",
-    "audioFile": "khuśi.wav"
+    "audioFile": "khusi.wav"
   },
   {
     "bengali": "হল",
@@ -797,7 +797,7 @@
                 showStatus('Preparing download...', 'ready');
 
                 const zip = new JSZip();
-                const audioFolder = zip.folder('audio').folder('words');
+                const audioFolder = zip.folder('audio').folder('p21');
 
                 // Convert recordings to MP3-like format (actually WAV with MP3 extension for simplicity)
                 for (const [transliteration, audioBlob] of recordings) {
