@@ -1,1037 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bengali Learning App</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        
-        .min-h-screen {
-            min-height: 100vh;
-        }
-        
-        .gradient-bg-1 {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
-        }
-        .gradient-bg-2 {
-            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
-        }
-        .gradient-bg-3 {
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-        }
-        
-        .p-4 { padding: 1rem; }
-        .p-6 { padding: 1.5rem; }
-        .px-4 { padding-left: 1rem; padding-right: 1rem; }
-        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-        .p-3 { padding: 0.75rem; }
-        
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mb-6 { margin-bottom: 1.5rem; }
-        .mb-8 { margin-bottom: 2rem; }
-        .mt-4 { margin-top: 1rem; }
-        
-        .text-center { text-align: center; }
-        .text-4xl { font-size: 2.25rem; }
-        .text-3xl { font-size: 1.875rem; }
-        .text-2xl { font-size: 1.5rem; }
-        .text-xl { font-size: 1.25rem; }
-        .text-lg { font-size: 1.125rem; }
-        .text-sm { font-size: 0.875rem; }
-        .text-xs { font-size: 0.75rem; }
-        .text-6xl { font-size: 3.75rem; }
-        .text-8xl { font-size: 6rem; }
-        
-        .font-bold { font-weight: 700; }
-        .font-semibold { font-weight: 600; }
-        
-        .text-white { color: white; }
-        .text-white\/90 { color: rgba(255, 255, 255, 0.9); }
-        .text-white\/80 { color: rgba(255, 255, 255, 0.8); }
-        
-        .bg-white\/20 { background-color: rgba(255, 255, 255, 0.2); }
-        .bg-white\/30 { background-color: rgba(255, 255, 255, 0.3); }
-        .bg-white { background-color: white; }
-        .bg-green-500 { background-color: #10b981; }
-        .bg-green-600 { background-color: #059669; }
-        .bg-blue-500 { background-color: #3b82f6; }
-        .bg-blue-600 { background-color: #2563eb; }
-        .bg-red-500 { background-color: #ef4444; }
-        .bg-red-600 { background-color: #dc2626; }
-        .bg-purple-500 { background-color: #8b5cf6; }
-        .bg-purple-600 { background-color: #7c3aed; }
-        
-        .border-2 { border-width: 2px; }
-        .border-4 { border-width: 4px; }
-        .border-white\/30 { border-color: rgba(255, 255, 255, 0.3); }
-        .border-white\/50 { border-color: rgba(255, 255, 255, 0.5); }
-        .border-dashed { border-style: dashed; }
-        
-        .rounded-2xl { border-radius: 1rem; }
-        .rounded-xl { border-radius: 0.75rem; }
-        .rounded-full { border-radius: 9999px; }
-        
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
-        .space-x-2 > * + * { margin-left: 0.5rem; }
-        .space-x-4 > * + * { margin-left: 1rem; }
-        .space-y-6 > * + * { margin-top: 1.5rem; }
-        
-        .grid { display: grid; }
-        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .gap-3 { gap: 0.75rem; }
-        .gap-4 { gap: 1rem; }
-        
-        .max-w-md { max-width: 28rem; }
-        .max-w-4xl { max-width: 56rem; }
-        .mx-auto { margin-left: auto; margin-right: auto; }
-        .w-full { width: 100%; }
-        .w-12 { width: 3rem; }
-        .aspect-square { aspect-ratio: 1 / 1; }
-        
-        .absolute { position: absolute; }
-        .relative { position: relative; }
-        .top-4 { top: 1rem; }
-        .left-1\/2 { left: 50%; }
-        .transform { transform: translateX(-50%); }
-        .-translate-x-1\/2 { transform: translateX(-50%); }
-        
-        .transition-all { 
-            transition-property: all; 
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); 
-            transition-duration: 150ms; 
-        }
-        .duration-300 { transition-duration: 300ms; }
-        
-        .hover\:bg-white\/30:hover { background-color: rgba(255, 255, 255, 0.3); }
-        .hover\:bg-green-600:hover { background-color: #059669; }
-        .hover\:bg-blue-600:hover { background-color: #2563eb; }
-        .hover\:bg-red-600:hover { background-color: #dc2626; }
-        .hover\:bg-purple-600:hover { background-color: #7c3aed; }
-        .hover\:scale-105:hover { transform: scale(1.05); }
-        
-        .backdrop-blur-sm { backdrop-filter: blur(4px); }
-        .opacity-80 { opacity: 0.8; }
-        
-        .cursor-crosshair { cursor: crosshair; }
-        .drawing-canvas { touch-action: none; }
-        
-        .fill-gray-300 { fill: #d1d5db; }
-        
-        .hidden { display: none; }
-        @media (min-width: 640px) {
-            .sm\:inline { display: inline; }
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-            40%, 43% { transform: translate3d(0,-30px,0); }
-            70% { transform: translate3d(0,-15px,0); }
-            90% { transform: translate3d(0,-4px,0); }
-        }
-        .animate-bounce {
-            animation: bounce 1s ease infinite;
-        }
-        
-        button {
-            cursor: pointer;
-            border: none;
-            outline: none;
-        }
-        
-        button:focus {
-            outline: 2px solid rgba(255, 255, 255, 0.5);
-            outline-offset: 2px;
-        }
-        
-        /* Make buttons more touch-friendly */
-        button {
-            min-height: 44px;
-        }
-        
-        /* Responsive adjustments for mobile */
-        @media (max-width: 640px) {
-            .text-8xl { font-size: 4rem; }
-            .text-6xl { font-size: 3rem; }
-            .text-4xl { font-size: 2rem; }
-            .p-6 { padding: 1rem; }
-            .grid-cols-5 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bengali Learning App</title>
+
+  <!-- jsPDF (for PDF export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+  <style>
+    /* ===== Your original styles (unchanged) ===== */
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+    .min-h-screen{min-height:100vh}
+    .gradient-bg-1{background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 50%,#ec4899 100%)}
+    .gradient-bg-2{background:linear-gradient(135deg,#10b981 0%,#3b82f6 100%)}
+    .gradient-bg-3{background:linear-gradient(135deg,#8b5cf6 0%,#ec4899 100%)}
+    .p-4{padding:1rem}.p-6{padding:1.5rem}.px-4{padding-left:1rem;padding-right:1rem}
+    .py-2{padding-top:.5rem;padding-bottom:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}
+    .px-6{padding-left:1.5rem;padding-right:1.5rem}.p-3{padding:.75rem}
+    .mb-2{margin-bottom:.5rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.mt-4{margin-top:1rem}
+    .text-center{text-align:center}.text-4xl{font-size:2.25rem}.text-3xl{font-size:1.875rem}.text-2xl{font-size:1.5rem}
+    .text-xl{font-size:1.25rem}.text-lg{font-size:1.125rem}.text-sm{font-size:.875rem}.text-xs{font-size:.75rem}
+    .text-6xl{font-size:3.75rem}.text-8xl{font-size:6rem}
+    .font-bold{font-weight:700}.font-semibold{font-weight:600}
+    .text-white{color:#fff}.text-white\/90{color:rgba(255,255,255,.9)}.text-white\/80{color:rgba(255,255,255,.8)}
+    .bg-white\/20{background-color:rgba(255,255,255,.2)}.bg-white\/30{background-color:rgba(255,255,255,.3)}.bg-white{background-color:#fff}
+    .bg-green-500{background-color:#10b981}.bg-green-600{background-color:#059669}
+    .bg-blue-500{background-color:#3b82f6}.bg-blue-600{background-color:#2563eb}
+    .bg-red-500{background-color:#ef4444}.bg-red-600{background-color:#dc2626}
+    .bg-purple-500{background-color:#8b5cf6}.bg-purple-600{background-color:#7c3aed}
+    .border-2{border-width:2px}.border-4{border-width:4px}.border-white\/30{border-color:rgba(255,255,255,.3)}.border-white\/50{border-color:rgba(255,255,255,.5)}.border-dashed{border-style:dashed}
+    .rounded-2xl{border-radius:1rem}.rounded-xl{border-radius:.75rem}.rounded-full{border-radius:9999px}
+    .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}
+    .space-x-2>*+*{margin-left:.5rem}.space-x-4>*+*{margin-left:1rem}.space-y-6>*+*{margin-top:1.5rem}
+    .grid{display:grid}.grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .gap-3{gap:.75rem}.gap-4{gap:1rem}
+    .max-w-md{max-width:28rem}.max-w-4xl{max-width:56rem}.mx-auto{margin-left:auto;margin-right:auto}
+    .w-full{width:100%}.w-12{width:3rem}.aspect-square{aspect-ratio:1/1}
+    .absolute{position:absolute}.relative{position:relative}.top-4{top:1rem}.left-1\/2{left:50%}.transform{transform:translateX(-50%)}.-translate-x-1\/2{transform:translateX(-50%)}
+    .transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:150ms}.duration-300{transition-duration:300ms}
+    .hover\:bg-white\/30:hover{background-color:rgba(255,255,255,.3)}.hover\:bg-green-600:hover{background-color:#059669}
+    .hover\:bg-blue-600:hover{background-color:#2563eb}.hover\:bg-red-600:hover{background-color:#dc2626}.hover\:bg-purple-600:hover{background-color:#7c3aed}.hover\:scale-105:hover{transform:scale(1.05)}
+    .backdrop-blur-sm{backdrop-filter:blur(4px)}.opacity-80{opacity:.8}
+    .cursor-crosshair{cursor:crosshair}.drawing-canvas{touch-action:none}
+    .fill-gray-300{fill:#d1d5db}
+    .hidden{display:none}
+    @media (min-width:640px){.sm\:inline{display:inline}}
+    @keyframes bounce{0%,20%,53%,80%,100%{transform:translate3d(0,0,0)}40%,43%{transform:translate3d(0,-30px,0)}70%{transform:translate3d(0,-15px,0)}90%{transform:translate3d(0,-4px,0)}}
+    .animate-bounce{animation:bounce 1s ease infinite}
+    button{cursor:pointer;border:none;outline:none;min-height:44px}
+    button:focus{outline:2px solid rgba(255,255,255,.5);outline-offset:2px}
+    @media (max-width:640px){.text-8xl{font-size:4rem}.text-6xl{font-size:3rem}.text-4xl{font-size:2rem}.p-6{padding:1rem}.grid-cols-5{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  </style>
 </head>
 <body>
-    <div id="app" class="font-sans"></div>
+  <div id="app" class="font-sans"></div>
 
-    <script>
-        // App state
-        let currentMode = 'home';
-        let selectedLetter = null;
-        let selectedWord = null;
-        let isDrawing = false;
-        let currentPath = '';
-        let paths = [];
-        let feedback = '';
+  <script>
+    /************** App State **************/
+    let currentMode = 'home';
+    let selectedLetter = null;
+    let selectedWord = null;
+    let isDrawing = false;
+    let currentPath = '';
+    let paths = [];
+    let feedback = '';
 
-        // Bengali alphabet with pronunciations and audio filenames
-        const bengaliAlphabet = [
-            { bengali: 'অ', english: 'a', pronunciation: 'aw', audioFile: 'aw.wav' },
-            { bengali: 'আ', english: 'aa', pronunciation: 'ah', audioFile: 'ah.wav' },
-            { bengali: 'ই', english: 'i', pronunciation: 'ee', audioFile: 'ee.wav' },
-            { bengali: 'ঈ', english: 'ii', pronunciation: 'eee', audioFile: 'eee.wav' },
-            { bengali: 'উ', english: 'u', pronunciation: 'oo', audioFile: 'oo.wav' },
-            { bengali: 'ঊ', english: 'uu', pronunciation: 'ooo', audioFile: 'ooo.wav' },
-            { bengali: 'এ', english: 'e', pronunciation: 'eh', audioFile: 'eh.wav' },
-            { bengali: 'ঐ', english: 'oi', pronunciation: 'oy', audioFile: 'oy.wav' },
-            { bengali: 'ও', english: 'o', pronunciation: 'oh', audioFile: 'oh.wav' },
-            { bengali: 'ঔ', english: 'ou', pronunciation: 'ow', audioFile: 'ow.wav' },
-            { bengali: 'ক', english: 'ka', pronunciation: 'kaw', audioFile: 'kaw.wav' },
-            { bengali: 'খ', english: 'kha', pronunciation: 'khaw', audioFile: 'khaw.wav' },
-            { bengali: 'গ', english: 'ga', pronunciation: 'gaw', audioFile: 'gaw.wav' },
-            { bengali: 'ঘ', english: 'gha', pronunciation: 'ghaw', audioFile: 'ghaw.wav' },
-            { bengali: 'চ', english: 'cha', pronunciation: 'chaw', audioFile: 'chaw.wav' },
-            { bengali: 'ছ', english: 'chha', pronunciation: 'chhaw', audioFile: 'chhaw.wav' },
-            { bengali: 'জ', english: 'ja', pronunciation: 'jaw', audioFile: 'jaw.wav' },
-            { bengali: 'ঝ', english: 'jha', pronunciation: 'jhaw', audioFile: 'jhaw.wav' },
-            { bengali: 'ট', english: 'ta', pronunciation: 'taw', audioFile: 'taw.wav' },
-            { bengali: 'ঠ', english: 'tha', pronunciation: 'thaw', audioFile: 'thaw.wav' },
-            { bengali: 'ড', english: 'da', pronunciation: 'daw', audioFile: 'daw.wav' },
-            { bengali: 'ঢ', english: 'dha', pronunciation: 'dhaw', audioFile: 'dhaw.wav' },
-            { bengali: 'ণ', english: 'na', pronunciation: 'naw', audioFile: 'naw.wav' },
-            { bengali: 'ত', english: 'ta', pronunciation: 'taw', audioFile: 'taw2.wav' },
-            { bengali: 'থ', english: 'tha', pronunciation: 'thaw', audioFile: 'thaw2.wav' },
-            { bengali: 'দ', english: 'da', pronunciation: 'daw', audioFile: 'daw2.wav' },
-            { bengali: 'ধ', english: 'dha', pronunciation: 'dhaw', audioFile: 'dhaw2.wav' },
-            { bengali: 'ন', english: 'na', pronunciation: 'naw', audioFile: 'naw2.wav' },
-            { bengali: 'প', english: 'pa', pronunciation: 'paw', audioFile: 'paw.wav' },
-            { bengali: 'ফ', english: 'pha', pronunciation: 'phaw', audioFile: 'phaw.wav' },
-            { bengali: 'ব', english: 'ba', pronunciation: 'baw', audioFile: 'baw.wav' },
-            { bengali: 'ভ', english: 'bha', pronunciation: 'bhaw', audioFile: 'bhaw.wav' },
-            { bengali: 'ম', english: 'ma', pronunciation: 'maw', audioFile: 'maw.wav' },
-            { bengali: 'য', english: 'ya', pronunciation: 'yaw', audioFile: 'yaw.wav' },
-            { bengali: 'র', english: 'ra', pronunciation: 'raw', audioFile: 'raw.wav' },
-            { bengali: 'ল', english: 'la', pronunciation: 'law', audioFile: 'law.wav' },
-            { bengali: 'শ', english: 'sha', pronunciation: 'shaw', audioFile: 'shaw.wav' },
-            { bengali: 'ষ', english: 'sha', pronunciation: 'shaw', audioFile: 'shaw2.wav' },
-            { bengali: 'স', english: 'sa', pronunciation: 'saw', audioFile: 'saw.wav' },
-            { bengali: 'হ', english: 'ha', pronunciation: 'haw', audioFile: 'haw.wav' }
-        ];
+    const AUTOSAVE_ON_DRAW_END = true;
 
-        // Bengali words for children - authentic Bengali vocabulary with audio filenames
-        const bengaliWords = [
-  {
-    "bengali": "উ",
-    "english": "U (a Bengali vowel)",
-    "transliteration": "u",
-    "audioFile": "u.wav"
-  },
-  {
-    "bengali": "উ-কার",
-    "english": "U-kar (the diacritical mark for the vowel 'u')",
-    "transliteration": "u-kar",
-    "audioFile": "u-kar.wav"
-  },
-  {
-    "bengali": "বানান",
-    "english": "spelling",
-    "transliteration": "banan",
-    "audioFile": "banan.wav"
-  },
-  {
-    "bengali": "করে",
-    "english": "by doing",
-    "transliteration": "kore",
-    "audioFile": "kore.wav"
-  },
-  {
-    "bengali": "পড়ো",
-    "english": "read",
-    "transliteration": "poṛo",
-    "audioFile": "poro.wav"
-  },
-  {
-    "bengali": "বউ",
-    "english": "wife",
-    "transliteration": "bou",
-    "audioFile": "bou.wav"
-  },
-  {
-    "bengali": "উই",
-    "english": "termite",
-    "transliteration": "ui",
-    "audioFile": "ui.wav"
-  },
-  {
-    "bengali": "উট",
-    "english": "camel",
-    "transliteration": "uṭ",
-    "audioFile": "uṭ.wav"
-  },
-  {
-    "bengali": "ফুল",
-    "english": "flower",
-    "transliteration": "phul",
-    "audioFile": "phul.wav"
-  },
-  {
-    "bengali": "কুকুর",
-    "english": "dog",
-    "transliteration": "kukur",
-    "audioFile": "kukur.wav"
-  },
-  {
-    "bengali": "পুতুল",
-    "english": "doll",
-    "transliteration": "putul",
-    "audioFile": "putul.wav"
-  },
-  {
-    "bengali": "মুখ",
-    "english": "face",
-    "transliteration": "mukh",
-    "audioFile": "mukh.wav"
-  },
-  {
-    "bengali": "সবুজ",
-    "english": "green",
-    "transliteration": "sobuj",
-    "audioFile": "sobuj.wav"
-  },
-  {
-    "bengali": "নতুন",
-    "english": "new",
-    "transliteration": "notun",
-    "audioFile": "notun.wav"
-  },
-  {
-    "bengali": "সুখ",
-    "english": "happiness",
-    "transliteration": "sukh",
-    "audioFile": "sukh.wav"
-  },
-  {
-    "bengali": "বকুল",
-    "english": "bakul flower",
-    "transliteration": "bokul",
-    "audioFile": "bokul.wav"
-  },
-  {
-    "bengali": "ডুমুর",
-    "english": "fig",
-    "transliteration": "ḍumur",
-    "audioFile": "dumur.wav"
-  },
-  {
-    "bengali": "বুক",
-    "english": "chest",
-    "transliteration": "buk",
-    "audioFile": "buk.wav"
-  },
-  {
-    "bengali": "মুকুল",
-    "english": "blossom",
-    "transliteration": "mukul",
-    "audioFile": "mukul.wav"
-  },
-  {
-    "bengali": "পুকুর",
-    "english": "pond",
-    "transliteration": "pukur",
-    "audioFile": "pukur.wav"
-  },
-  {
-    "bengali": "চুল",
-    "english": "hair",
-    "transliteration": "cul",
-    "audioFile": "cul.wav"
-  },
-  {
-    "bengali": "কুয়াশা",
-    "english": "fog",
-    "transliteration": "kuyaśa",
-    "audioFile": "kuyasa.wav"
-  },
-  {
-    "bengali": "সুপারি",
-    "english": "betel nut",
-    "transliteration": "supari",
-    "audioFile": "supari.wav"
-  },
-  {
-    "bengali": "দুল",
-    "english": "earring",
-    "transliteration": "dul",
-    "audioFile": "dul.wav"
-  },
-  {
-    "bengali": "দুয়ার",
-    "english": "door",
-    "transliteration": "duyar",
-    "audioFile": "duyar.wav"
-  },
-  {
-    "bengali": "দুপুর",
-    "english": "afternoon",
-    "transliteration": "dupur",
-    "audioFile": "dupur.wav"
-  },
-  {
-    "bengali": "গাছ",
-    "english": "tree",
-    "transliteration": "gach",
-    "audioFile": "gach.wav"
-  },
-  {
-    "bengali": "ভরা",
-    "english": "full of",
-    "transliteration": "bhora",
-    "audioFile": "bhora.wav"
-  },
-  {
-    "bengali": "রঙিন",
-    "english": "colorful",
-    "transliteration": "roṅin",
-    "audioFile": "roṅin.wav"
-  },
-  {
-    "bengali": "মালী",
-    "english": "gardener",
-    "transliteration": "mali",
-    "audioFile": "mali.wav"
-  },
-  {
-    "bengali": "জল",
-    "english": "water",
-    "transliteration": "jol",
-    "audioFile": "jol.wav"
-  },
-  {
-    "bengali": "দিল",
-    "english": "gave",
-    "transliteration": "dil",
-    "audioFile": "dil.wav"
-  },
-  {
-    "bengali": "ভীম",
-    "english": "Bhim (a name)",
-    "transliteration": "bhim",
-    "audioFile": "bhim.wav"
-  },
-  {
-    "bengali": "সাজি",
-    "english": "basket",
-    "transliteration": "saji",
-    "audioFile": "saji.wav"
-  },
-  {
-    "bengali": "লাল",
-    "english": "red",
-    "transliteration": "lal",
-    "audioFile": "lal.wav"
-  },
-  {
-    "bengali": "নীল",
-    "english": "blue",
-    "transliteration": "nil",
-    "audioFile": "nil.wav"
-  },
-  {
-    "bengali": "আর",
-    "english": "and",
-    "transliteration": "ar",
-    "audioFile": "ar.wav"
-  },
-  {
-    "bengali": "হলুদ",
-    "english": "yellow",
-    "transliteration": "holud",
-    "audioFile": "holud.wav"
-  },
-  {
-    "bengali": "তুলল",
-    "english": "picked up",
-    "transliteration": "tullol",
-    "audioFile": "tullol.wav"
-  },
-  {
-    "bengali": "বাড়ির",
-    "english": "of the house",
-    "transliteration": "baṛir",
-    "audioFile": "baṛir.wav"
-  },
-  {
-    "bengali": "ফুলদানি",
-    "english": "flower vase",
-    "transliteration": "phuldani",
-    "audioFile": "phuldani.wav"
-  },
-  {
-    "bengali": "সাজাল",
-    "english": "decorated",
-    "transliteration": "sajal",
-    "audioFile": "sajal.wav"
-  },
-  {
-    "bengali": "সবাই",
-    "english": "everyone",
-    "transliteration": "sobai",
-    "audioFile": "sobai.wav"
-  },
-  {
-    "bengali": "খুশি",
-    "english": "happy",
-    "transliteration": "khuśi",
-    "audioFile": "khuśi.wav"
-  },
-  {
-    "bengali": "হল",
-    "english": "became",
-    "transliteration": "holo",
-    "audioFile": "holo.wav"
-  }
-];
+    /************** Data (unchanged lists) **************/
+    const bengaliAlphabet = [
+      { bengali:'অ',english:'a',pronunciation:'aw',audioFile:'aw.wav' },
+      { bengali:'আ',english:'aa',pronunciation:'ah',audioFile:'ah.wav' },
+      { bengali:'ই',english:'i',pronunciation:'ee',audioFile:'ee.wav' },
+      { bengali:'ঈ',english:'ii',pronunciation:'eee',audioFile:'eee.wav' },
+      { bengali:'উ',english:'u',pronunciation:'oo',audioFile:'oo.wav' },
+      { bengali:'ঊ',english:'uu',pronunciation:'ooo',audioFile:'ooo.wav' },
+      { bengali:'এ',english:'e',pronunciation:'eh',audioFile:'eh.wav' },
+      { bengali:'ঐ',english:'oi',pronunciation:'oy',audioFile:'oy.wav' },
+      { bengali:'ও',english:'o',pronunciation:'oh',audioFile:'oh.wav' },
+      { bengali:'ঔ',english:'ou',pronunciation:'ow',audioFile:'ow.wav' },
+      { bengali:'ক',english:'ka',pronunciation:'kaw',audioFile:'kaw.wav' },
+      { bengali:'খ',english:'kha',pronunciation:'khaw',audioFile:'khaw.wav' },
+      { bengali:'গ',english:'ga',pronunciation:'gaw',audioFile:'gaw.wav' },
+      { bengali:'ঘ',english:'gha',pronunciation:'ghaw',audioFile:'ghaw.wav' },
+      { bengali:'চ',english:'cha',pronunciation:'chaw',audioFile:'chaw.wav' },
+      { bengali:'ছ',english:'chha',pronunciation:'chhaw',audioFile:'chhaw.wav' },
+      { bengali:'জ',english:'ja',pronunciation:'jaw',audioFile:'jaw.wav' },
+      { bengali:'ঝ',english:'jha',pronunciation:'jhaw',audioFile:'jhaw.wav' },
+      { bengali:'ট',english:'ta',pronunciation:'taw',audioFile:'taw.wav' },
+      { bengali:'ঠ',english:'tha',pronunciation:'thaw',audioFile:'thaw.wav' },
+      { bengali:'ড',english:'da',pronunciation:'daw',audioFile:'daw.wav' },
+      { bengali:'ঢ',english:'dha',pronunciation:'dhaw',audioFile:'dhaw.wav' },
+      { bengali:'ণ',english:'na',pronunciation:'naw',audioFile:'naw.wav' },
+      { bengali:'ত',english:'ta',pronunciation:'taw',audioFile:'taw2.wav' },
+      { bengali:'থ',english:'tha',pronunciation:'thaw',audioFile:'thaw2.wav' },
+      { bengali:'দ',english:'da',pronunciation:'daw',audioFile:'daw2.wav' },
+      { bengali:'ধ',english:'dha',pronunciation:'dhaw',audioFile:'dhaw2.wav' },
+      { bengali:'ন',english:'na',pronunciation:'naw',audioFile:'naw2.wav' },
+      { bengali:'প',english:'pa',pronunciation:'paw',audioFile:'paw.wav' },
+      { bengali:'ফ',english:'pha',pronunciation:'phaw',audioFile:'phaw.wav' },
+      { bengali:'ব',english:'ba',pronunciation:'baw',audioFile:'baw.wav' },
+      { bengali:'ভ',english:'bha',pronunciation:'bhaw',audioFile:'bhaw.wav' },
+      { bengali:'ম',english:'ma',pronunciation:'maw',audioFile:'maw.wav' },
+      { bengali:'য',english:'ya',pronunciation:'yaw',audioFile:'yaw.wav' },
+      { bengali:'র',english:'ra',pronunciation:'raw',audioFile:'raw.wav' },
+      { bengali:'ল',english:'la',pronunciation:'law',audioFile:'law.wav' },
+      { bengali:'শ',english:'sha',pronunciation:'shaw',audioFile:'shaw.wav' },
+      { bengali:'ষ',english:'sha',pronunciation:'shaw',audioFile:'shaw2.wav' },
+      { bengali:'স',english:'sa',pronunciation:'saw',audioFile:'saw.wav' },
+      { bengali:'হ',english:'ha',pronunciation:'haw',audioFile:'haw.wav' }
+    ];
 
-        // Audio playback functions for pre-recorded files
-        function playBengaliAudio(audioFile, type = 'letter') {
-            const audioPath = type === 'letter' ? `audio/letters/${audioFile}` : `audio/p21/${audioFile}`;
-            const audio = new Audio(audioPath);
-            
-            audio.oncanplay = () => {
-                showFeedback('🔊 Playing Bengali audio...');
-                setTimeout(() => hideFeedback(), 2000);
-            };
-            
-            audio.onerror = (error) => {
-                console.error('Audio file not found:', audioPath);
-                showFeedback(`Audio file not found: ${audioFile}`);
-                setTimeout(() => hideFeedback(), 3000);
-            };
-            
-            audio.onended = () => {
-                // Audio finished playing
-            };
-            
-            audio.play().catch(error => {
-                console.error('Error playing audio:', error);
-                showFeedback('Could not play audio file');
-                setTimeout(() => hideFeedback(), 3000);
-            });
+    const bengaliWords = [
+      {"bengali":"উ","english":"U (a Bengali vowel)","transliteration":"u","audioFile":"u.wav"},
+      {"bengali":"উ-কার","english":"U-kar (the diacritical mark for the vowel 'u')","transliteration":"u-kar","audioFile":"u-kar.wav"},
+      {"bengali":"বানান","english":"spelling","transliteration":"banan","audioFile":"banan.wav"},
+      {"bengali":"করে","english":"by doing","transliteration":"kore","audioFile":"kore.wav"},
+      {"bengali":"পড়ো","english":"read","transliteration":"poṛo","audioFile":"poro.wav"},
+      {"bengali":"বউ","english":"wife","transliteration":"bou","audioFile":"bou.wav"},
+      {"bengali":"উই","english":"termite","transliteration":"ui","audioFile":"ui.wav"},
+      {"bengali":"উট","english":"camel","transliteration":"uṭ","audioFile":"uṭ.wav"},
+      {"bengali":"ফুল","english":"flower","transliteration":"phul","audioFile":"phul.wav"},
+      {"bengali":"কুকুর","english":"dog","transliteration":"kukur","audioFile":"kukur.wav"},
+      {"bengali":"পুতুল","english":"doll","transliteration":"putul","audioFile":"putul.wav"},
+      {"bengali":"মুখ","english":"face","transliteration":"mukh","audioFile":"mukh.wav"},
+      {"bengali":"সবুজ","english":"green","transliteration":"sobuj","audioFile":"sobuj.wav"},
+      {"bengali":"নতুন","english":"new","transliteration":"notun","audioFile":"notun.wav"},
+      {"bengali":"সুখ","english":"happiness","transliteration":"sukh","audioFile":"sukh.wav"},
+      {"bengali":"বকুল","english":"bakul flower","transliteration":"bokul","audioFile":"bokul.wav"},
+      {"bengali":"ডুমুর","english":"fig","transliteration":"ḍumur","audioFile":"dumur.wav"},
+      {"bengali":"বুক","english":"chest","transliteration":"buk","audioFile":"buk.wav"},
+      {"bengali":"মুকুল","english":"blossom","transliteration":"mukul","audioFile":"mukul.wav"},
+      {"bengali":"পুকুর","english":"pond","transliteration":"pukur","audioFile":"pukur.wav"},
+      {"bengali":"চুল","english":"hair","transliteration":"cul","audioFile":"cul.wav"},
+      {"bengali":"কুয়াশা","english":"fog","transliteration":"kuyaśa","audioFile":"kuyasa.wav"},
+      {"bengali":"সুপারি","english":"betel nut","transliteration":"supari","audioFile":"supari.wav"},
+      {"bengali":"দুল","english":"earring","transliteration":"dul","audioFile":"dul.wav"},
+      {"bengali":"দুয়ার","english":"door","transliteration":"duyar","audioFile":"duyar.wav"},
+      {"bengali":"দুপুর","english":"afternoon","transliteration":"dupur","audioFile":"dupur.wav"},
+      {"bengali":"গাছ","english":"tree","transliteration":"gach","audioFile":"gach.wav"},
+      {"bengali":"ভরা","english":"full of","transliteration":"bhora","audioFile":"bhora.wav"},
+      {"bengali":"রঙিন","english":"colorful","transliteration":"roṅin","audioFile":"roṅin.wav"},
+      {"bengali":"মালী","english":"gardener","transliteration":"mali","audioFile":"mali.wav"},
+      {"bengali":"জল","english":"water","transliteration":"jol","audioFile":"jol.wav"},
+      {"bengali":"দিল","english":"gave","transliteration":"dil","audioFile":"dil.wav"},
+      {"bengali":"ভীম","english":"Bhim (a name)","transliteration":"bhim","audioFile":"bhim.wav"},
+      {"bengali":"সাজি","english":"basket","transliteration":"saji","audioFile":"saji.wav"},
+      {"bengali":"লাল","english":"red","transliteration":"lal","audioFile":"lal.wav"},
+      {"bengali":"নীল","english":"blue","transliteration":"nil","audioFile":"nil.wav"},
+      {"bengali":"আর","english":"and","transliteration":"ar","audioFile":"ar.wav"},
+      {"bengali":"হলুদ","english":"yellow","transliteration":"holud","audioFile":"holud.wav"},
+      {"bengali":"তুলল","english":"picked up","transliteration":"tullol","audioFile":"tullol.wav"},
+      {"bengali":"বাড়ির","english":"of the house","transliteration":"baṛir","audioFile":"baṛir.wav"},
+      {"bengali":"ফুলদানি","english":"flower vase","transliteration":"phuldani","audioFile":"phuldani.wav"},
+      {"bengali":"সাজাল","english":"decorated","transliteration":"sajal","audioFile":"sajal.wav"},
+      {"bengali":"সবাই","english":"everyone","transliteration":"sobai","audioFile":"sobai.wav"},
+      {"bengali":"খুশি","english":"happy","transliteration":"khuśi","audioFile":"khuśi.wav"},
+      {"bengali":"হল","english":"became","transliteration":"holo","audioFile":"holo.wav"}
+    ];
+
+    /************** Audio (unchanged) **************/
+    function playBengaliAudio(audioFile, type='letter'){
+      const audioPath = type === 'letter' ? `audio/letters/${audioFile}` : `audio/p21/${audioFile}`;
+      const audio = new Audio(audioPath);
+      audio.oncanplay = () => { showFeedback('🔊 Playing Bengali audio...'); setTimeout(hideFeedback,2000); };
+      audio.onerror = () => { showFeedback(`Audio file not found: ${audioFile}`); setTimeout(hideFeedback,3000); };
+      audio.play().catch(()=>{ showFeedback('Could not play audio file'); setTimeout(hideFeedback,3000); });
+    }
+    function speakEnglishText(text){
+      if(!('speechSynthesis' in window)) return showFeedbackTimed('Text-to-speech not supported on this device',3000);
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang='en-US'; u.rate=.8; u.pitch=1; u.volume=1;
+      u.onstart=()=>showFeedbackTimed('🔊 Playing English audio...',2000);
+      u.onerror=()=>showFeedbackTimed('English audio not available',3000);
+      speechSynthesis.speak(u);
+    }
+    function showFeedbackTimed(msg,ms){ showFeedback(msg); setTimeout(hideFeedback,ms); }
+
+    /************** Persistence helpers **************/
+    function getCurrentKindAndKey(){
+      if(selectedLetter) return { kind:'letter', key:`trace:letter:${selectedLetter.bengali}` };
+      if(selectedWord)   return { kind:'word',   key:`trace:word:${selectedWord.bengali}` };
+      return { kind:null, key:null };
+    }
+    function saveCurrentTrace(){
+      const { key } = getCurrentKindAndKey();
+      if(!key) return;
+      const box = document.querySelector('.drawing-canvas');
+      if(!box) return;
+      const rect = box.getBoundingClientRect();
+      const payload = { w: Math.round(rect.width), h: Math.round(rect.height), paths: [...paths] };
+      try{ localStorage.setItem(key, JSON.stringify(payload)); }catch(e){ console.warn('Save failed', e); }
+    }
+    function loadTraceForCurrent(){
+      const { key } = getCurrentKindAndKey();
+      if(!key) { paths=[]; return; }
+      const raw = localStorage.getItem(key);
+      paths = [];
+      if(!raw){ updateCanvas(); return; }
+      try{
+        const data = JSON.parse(raw);
+        // Scale paths to current canvas size if needed
+        const box = document.querySelector('.drawing-canvas');
+        const rect = box?.getBoundingClientRect();
+        if(rect && data.w && data.h && (data.w!==Math.round(rect.width) || data.h!==Math.round(rect.height))){
+          const sx = rect.width  / data.w;
+          const sy = rect.height / data.h;
+          paths = data.paths.map(p => scalePath(p, sx, sy));
+        } else {
+          paths = data.paths || [];
+        }
+      }catch(e){ console.warn('Load failed', e); paths=[]; }
+      updateCanvas();
+    }
+    function resetCurrentTrace(){
+      const { key } = getCurrentKindAndKey();
+      if(key) localStorage.removeItem(key);
+      clearCanvas();
+    }
+    function scalePath(d, sx, sy){
+      // only supports "M x y L x y L x y ..." which is what we generate
+      return d.replace(/([ML])\s*([\d.]+)\s*([\d.]+)/g, (_, cmd, x, y) => {
+        const nx = (parseFloat(x)*sx).toFixed(2);
+        const ny = (parseFloat(y)*sy).toFixed(2);
+        return `${cmd} ${nx} ${ny}`;
+      });
+    }
+
+    /************** Drawing **************/
+    function getBoxAndXY(e){
+      const canvas = document.querySelector('.drawing-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) - rect.left;
+      const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) - rect.top;
+      return { x: Math.max(0, Math.min(rect.width,  cx)), y: Math.max(0, Math.min(rect.height, cy)) };
+    }
+    function startDrawing(e){
+      e.preventDefault(); isDrawing = true;
+      const { x, y } = getBoxAndXY(e);
+      currentPath = `M ${x} ${y}`;
+      hideFeedback();
+    }
+    function draw(e){
+      if(!isDrawing) return; e.preventDefault();
+      const { x, y } = getBoxAndXY(e);
+      currentPath += ` L ${x} ${y}`;
+      updateCanvas();
+    }
+    function stopDrawing(e){
+      if(!isDrawing) return; e.preventDefault();
+      isDrawing = false;
+      if(currentPath.length > 0) paths.push(currentPath);
+      currentPath = '';
+      updateCanvas();
+      provideFeedback();
+      if (AUTOSAVE_ON_DRAW_END) saveCurrentTrace();
+    }
+    function clearCanvas(){
+      paths = []; currentPath = ''; hideFeedback(); updateCanvas();
+    }
+    function updateCanvas(){
+      const canvas = document.getElementById('drawingCanvas');
+      if(!canvas) return;
+      let pathsHTML = '';
+      paths.forEach(p => { if(p) pathsHTML += `<path d="${p}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`; });
+      if(currentPath)  pathsHTML += `<path d="${currentPath}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
+      canvas.innerHTML = pathsHTML;
+    }
+    function provideFeedback(){
+      const msgs = ["Great start! Keep practicing!","Nice work! You're getting better!","Excellent tracing! Well done!","Perfect! You're doing amazing!","Wonderful! Keep up the good work!"];
+      showFeedback(msgs[Math.floor(Math.random()*msgs.length)]);
+    }
+    function showFeedback(message){
+      feedback = message;
+      const el = document.getElementById('feedback');
+      if(el){ el.textContent = message; el.style.display='block'; setTimeout(hideFeedback,3000); }
+    }
+    function hideFeedback(){
+      feedback=''; const el = document.getElementById('feedback'); if(el) el.style.display='none';
+    }
+
+    /************** Navigation **************/
+    function setMode(mode){ currentMode = mode; selectedLetter=null; selectedWord=null; clearCanvas(); render(); }
+    function selectLetter(letter){ selectedLetter=letter; clearCanvas(); render(); }
+    function selectWord(word){ selectedWord=word; clearCanvas(); render(); }
+    function goBack(){
+      if(selectedLetter){ selectedLetter=null; }
+      else if(selectedWord){ selectedWord=null; }
+      clearCanvas(); render();
+    }
+    function goToNextLetter(){
+      if(!selectedLetter) return;
+      const idx = bengaliAlphabet.findIndex(l => l.bengali===selectedLetter.bengali);
+      selectedLetter = bengaliAlphabet[(idx+1)%bengaliAlphabet.length];
+      clearCanvas(); render();
+    }
+    function goToPreviousLetter(){
+      if(!selectedLetter) return;
+      const idx = bengaliAlphabet.findIndex(l => l.bengali===selectedLetter.bengali);
+      selectedLetter = bengaliAlphabet[idx===0?bengaliAlphabet.length-1:idx-1];
+      clearCanvas(); render();
+    }
+    function goToNextWord(){
+      if(!selectedWord) return;
+      const idx = bengaliWords.findIndex(w => w.bengali===selectedWord.bengali);
+      selectedWord = bengaliWords[(idx+1)%bengaliWords.length];
+      clearCanvas(); render();
+    }
+    function goToPreviousWord(){
+      if(!selectedWord) return;
+      const idx = bengaliWords.findIndex(w => w.bengali===selectedWord.bengali);
+      selectedWord = bengaliWords[idx===0?bengaliWords.length-1:idx-1];
+      clearCanvas(); render();
+    }
+
+    /************** PDF Export **************/
+    async function downloadAllTracingsPDF(){
+      // Wait for jsPDF
+      const jsPDF = window.jspdf?.jsPDF;
+      if(!jsPDF){ alert('PDF library not loaded yet. Please try again in a moment.'); return; }
+
+      const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+
+      const items = [
+        ...bengaliAlphabet.map(l => ({kind:'letter', label:l.bengali, display:l.bengali})),
+        ...bengaliWords.map(w => ({kind:'word',   label:w.bengali, display:w.bengali}))
+      ];
+
+      let firstPagePlaced = false;
+
+      for(const it of items){
+        const key = `trace:${it.kind}:${it.label}`;
+        const raw = localStorage.getItem(key);
+        if(!raw) continue; // skip unsaved
+
+        // Build an SVG that overlays the paths on the faint glyph/word
+        const { svgString, width, height } = makeSVGPreview(it.kind, it.display, raw);
+
+        // Convert SVG to image via blob URL, then draw into a canvas to get PNG data
+        const imgDataURL = await svgToPngDataURL(svgString, width, height);
+
+        if(firstPagePlaced){
+          doc.addPage({orientation:'landscape'});
+        } else {
+          firstPagePlaced = true;
         }
 
-        // Text-to-speech function for English fallbacks (simplified)
-        function speakEnglishText(text) {
-            if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
-                
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.8;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                
-                utterance.onstart = () => {
-                    showFeedback('🔊 Playing English audio...');
-                    setTimeout(() => hideFeedback(), 2000);
-                };
-                
-                utterance.onerror = (event) => {
-                    console.error('Speech synthesis error:', event);
-                    showFeedback('English audio not available');
-                    setTimeout(() => hideFeedback(), 3000);
-                };
-                
-                try {
-                    speechSynthesis.speak(utterance);
-                } catch (error) {
-                    console.error('Speech error:', error);
-                    showFeedback('Text-to-speech not supported');
-                    setTimeout(() => hideFeedback(), 3000);
-                }
-            } else {
-                showFeedback('Text-to-speech not supported on this device');
-                setTimeout(() => hideFeedback(), 3000);
-            }
-        }
+        // Title
+        doc.setFont('helvetica','bold'); doc.setFontSize(18);
+        doc.text(`${it.kind === 'letter' ? 'Letter' : 'Word'}: ${it.label}`, 40, 40);
 
-        // Drawing functions
-        function startDrawing(e) {
-            e.preventDefault();
-            isDrawing = true;
-            const canvas = document.querySelector('.drawing-canvas');
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-            currentPath = `M ${x} ${y}`;
-            hideFeedback();
-        }
+        // Place image centered & scaled
+        const margin = 40;
+        const maxW = pageW - margin*2;
+        const maxH = pageH - margin*2 - 20;
+        const scale = Math.min(maxW/width, maxH/height);
+        const drawW = width*scale, drawH = height*scale;
+        const x = (pageW - drawW)/2, y = (pageH - drawH)/2 + 10;
+        doc.addImage(imgDataURL, 'PNG', x, y, drawW, drawH);
+      }
 
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            const canvas = document.querySelector('.drawing-canvas');
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-            currentPath += ` L ${x} ${y}`;
-            updateCanvas();
-        }
+      if(!firstPagePlaced){
+        alert('No saved tracings yet!');
+        return;
+      }
 
-        function stopDrawing(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            isDrawing = false;
-            if (currentPath.length > 0) {
-                paths.push(currentPath);
-            }
-            currentPath = '';
-            updateCanvas();
-            provideFeedback();
-        }
+      doc.save('bengali-tracings.pdf');
+    }
 
-        function clearCanvas() {
-            paths = [];
-            currentPath = '';
-            hideFeedback();
-            updateCanvas();
-        }
+    function makeSVGPreview(kind, displayText, rawSaved){
+      // Target render size for PDF preview image
+      const width = 1000, height = 400;
 
-        function updateCanvas() {
-            const canvas = document.getElementById('drawingCanvas');
-            if (!canvas) return;
-            
-            let pathsHTML = '';
-            
-            // Draw completed paths
-            paths.forEach(path => {
-                if (path && path.length > 0) {
-                    pathsHTML += `<path d="${path}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
-                }
-            });
-            
-            // Draw current path being drawn
-            if (currentPath && currentPath.length > 0) {
-                pathsHTML += `<path d="${currentPath}" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
-            }
-            
-            canvas.innerHTML = pathsHTML;
-        }
+      let saved = null;
+      try{ saved = JSON.parse(rawSaved); }catch{ saved = null; }
+      const sx = saved?.w ? width/saved.w : 1;
+      const sy = saved?.h ? height/saved.h : 1;
+      const scaledPaths = (saved?.paths || []).map(p => scalePath(p, sx, sy));
 
-        function provideFeedback() {
-            const feedbackMessages = [
-                "Great start! Keep practicing!",
-                "Nice work! You're getting better!",
-                "Excellent tracing! Well done!",
-                "Perfect! You're doing amazing!",
-                "Wonderful! Keep up the good work!"
-            ];
-            const randomFeedback = feedbackMessages[Math.floor(Math.random() * feedbackMessages.length)];
-            showFeedback(randomFeedback);
-        }
+      const fontSize = kind === 'letter' ? 220 : 150;
+      const textY     = kind === 'letter' ? height/2 + 20 : height/2 + 6;
 
-        function showFeedback(message) {
-            feedback = message;
-            const feedbackEl = document.getElementById('feedback');
-            if (feedbackEl) {
-                feedbackEl.textContent = message;
-                feedbackEl.style.display = 'block';
-                setTimeout(() => hideFeedback(), 3000);
-            }
-        }
+      const pathElems = scaledPaths.map(p =>
+        `<path d="${p}" stroke="#2563EB" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+      ).join('');
 
-        function hideFeedback() {
-            feedback = '';
-            const feedbackEl = document.getElementById('feedback');
-            if (feedbackEl) {
-                feedbackEl.style.display = 'none';
-            }
-        }
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <rect width="100%" height="100%" fill="white"/>
+          <text x="50%" y="${textY}" text-anchor="middle" dominant-baseline="central"
+                fill="#d1d5db" font-size="${fontSize}" font-weight="700" style="font-family: sans-serif;">
+            ${escapeXml(displayText)}
+          </text>
+          ${pathElems}
+        </svg>`;
 
-        // Navigation functions
-        function setMode(mode) {
-            currentMode = mode;
-            selectedLetter = null;
-            selectedWord = null;
-            clearCanvas();
-            render();
-        }
+      return { svgString: svg, width, height };
+    }
 
-        function selectLetter(letter) {
-            selectedLetter = letter;
-            clearCanvas();
-            render();
-        }
+    function escapeXml(s){
+      return String(s).replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+    }
 
-        function selectWord(word) {
-            selectedWord = word;
-            clearCanvas();
-            render();
-        }
+    function svgToPngDataURL(svgString, width, height){
+      return new Promise((resolve, reject) => {
+        const blob = new Blob([svgString], { type:'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+        img.src = url;
+      });
+    }
 
-        function goBack() {
-            if (selectedLetter) {
-                selectedLetter = null;
-            } else if (selectedWord) {
-                selectedWord = null;
-            }
-            clearCanvas();
-            render();
-        }
+    /************** Render **************/
+    function renderHomeScreen(){
+      return `
+        <div class="min-h-screen gradient-bg-1 p-6">
+          <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-4">Bengali Learning for Sahaj Para P21</h1>
+            <p class="text-xl text-white/90">Learn Bengali letters and words!</p>
+          </div>
 
-        // Navigation helper functions
-        function goToNextLetter() {
-            if (selectedLetter) {
-                const currentIndex = bengaliAlphabet.findIndex(letter => letter.bengali === selectedLetter.bengali);
-                const nextIndex = (currentIndex + 1) % bengaliAlphabet.length; // Loop back to first
-                selectedLetter = bengaliAlphabet[nextIndex];
-                clearCanvas();
-                render();
-            }
-        }
+          <div class="flex flex-col items-center space-y-6 max-w-md mx-auto">
+            <button onclick="setMode('letters')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
+              <div class="text-4xl mb-2">অ আ ই</div>
+              <div class="text-xl font-semibold">Learn Letters</div>
+              <div class="text-sm opacity-80">Practice Bengali alphabet</div>
+            </button>
 
-        function goToPreviousLetter() {
-            if (selectedLetter) {
-                const currentIndex = bengaliAlphabet.findIndex(letter => letter.bengali === selectedLetter.bengali);
-                const prevIndex = currentIndex === 0 ? bengaliAlphabet.length - 1 : currentIndex - 1; // Loop to last
-                selectedLetter = bengaliAlphabet[prevIndex];
-                clearCanvas();
-                render();
-            }
-        }
+            <button onclick="setMode('words')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
+              <div class="text-4xl mb-2">হলুদ ফুলদানি</div>
+              <div class="text-xl font-semibold">Learn Words on P21</div>
+              <div class="text-sm opacity-80">Practice simple Bengali words</div>
+            </button>
 
-        function goToNextWord() {
-            if (selectedWord) {
-                const currentIndex = bengaliWords.findIndex(word => word.bengali === selectedWord.bengali);
-                const nextIndex = (currentIndex + 1) % bengaliWords.length; // Loop back to first
-                selectedWord = bengaliWords[nextIndex];
-                clearCanvas();
-                render();
-            }
-        }
+            <button onclick="downloadAllTracingsPDF()" class="w-full bg-green-500 hover:bg-green-600 rounded-2xl p-6 text-white transition-all duration-300">
+              <div class="text-xl font-semibold">Download All Tracings (PDF)</div>
+              <div class="text-sm text-white/80">Includes your drawings over the original glyph/word</div>
+            </button>
+          </div>
+        </div>
+      `;
+    }
 
-        function goToPreviousWord() {
-            if (selectedWord) {
-                const currentIndex = bengaliWords.findIndex(word => word.bengali === selectedWord.bengali);
-                const prevIndex = currentIndex === 0 ? bengaliWords.length - 1 : currentIndex - 1; // Loop to last
-                selectedWord = bengaliWords[prevIndex];
-                clearCanvas();
-                render();
-            }
-        }
+    function renderLettersScreen(){
+      if(selectedLetter) return renderLetterPractice(selectedLetter);
+      return `
+        <div class="min-h-screen gradient-bg-2 p-4">
+          <div class="flex items-center justify-between mb-6">
+            <button onclick="setMode('home')" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white">Bengali Letters</h2>
+            <div class="w-12"></div>
+          </div>
 
-        // Render functions
-        function renderHomeScreen() {
-            return `
-                <div class="min-h-screen gradient-bg-1 p-6">
-                    <div class="text-center mb-8">
-                        <h1 class="text-4xl font-bold text-white mb-4">Bengali Learning for Sahaj Para P21</h1>
-                        <p class="text-xl text-white/90">Learn Bengali letters and words!</p>
-                    </div>
+          <div class="grid grid-cols-5 gap-3 max-w-4xl mx-auto">
+            ${bengaliAlphabet.map((letter, i)=>`
+              <button onclick="selectLetter(bengaliAlphabet[${i}])"
+                class="aspect-square bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl font-bold text-white hover:bg-white/30 hover:scale-105 transition-all duration-300 border-2 border-white/30">
+                ${letter.bengali}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
 
-                    <div class="flex flex-col items-center space-y-6 max-w-md mx-auto">
-                        <button onclick="setMode('letters')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
-                            <div class="text-4xl mb-2">অ আ ই</div>
-                            <div class="text-xl font-semibold">Learn Letters</div>
-                            <div class="text-sm opacity-80">Practice Bengali alphabet</div>
-                        </button>
+    function renderWordsScreen(){
+      if(selectedWord) return renderWordPractice(selectedWord);
+      return `
+        <div class="min-h-screen gradient-bg-3 p-4">
+          <div class="flex items-center justify-between mb-6">
+            <button onclick="setMode('home')" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white">Bengali Words</h2>
+            <div class="w-12"></div>
+          </div>
 
-                        <button onclick="setMode('words')" class="w-full bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-white hover:bg-white/30 transition-all duration-300 border-2 border-white/30">
-                            <div class="text-4xl mb-2">হলুদ ফুলদানি</div>
-                            <div class="text-xl font-semibold">Learn Words on P21</div>
-                            <div class="text-sm opacity-80">Practice simple Bengali words</div>
-                        </button>
-                    </div>
+          <div class="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
+            ${bengaliWords.map((word, i)=>`
+              <button onclick="selectWord(bengaliWords[${i}])"
+                class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white hover:bg-white/30 hover:scale-105 transition-all duration-300 border-2 border-white/30">
+                <div class="text-3xl font-bold mb-2">${word.bengali}</div>
+                <div class="text-lg">${word.english}</div>
+                <div class="text-sm opacity-80">${word.transliteration}</div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLetterPractice(letter){
+      const idx = bengaliAlphabet.findIndex(l=>l.bengali===letter.bengali);
+      return `
+        <div class="min-h-screen gradient-bg-2 p-4">
+          <div class="max-w-4xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+              <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              </button>
+              <h2 class="text-2xl font-bold text-white">Letter ${idx+1} of ${bengaliAlphabet.length}</h2>
+              <div class="w-12"></div>
+            </div>
+
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
+              <div class="text-center mb-6">
+                <div class="text-8xl font-bold text-white mb-4">${letter.bengali}</div>
+                <div class="text-2xl text-white mb-2">Pronunciation: ${letter.pronunciation}</div>
+                <div class="flex justify-center space-x-4">
+                  <button onclick="playBengaliAudio('${letter.audioFile}','letter')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
+                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 10 8L7 20V4z"/></svg><span class="hidden sm:inline">Bengali</span>
+                  </button>
+                  <button onclick="speakEnglishText('${letter.pronunciation}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English pronunciation guide">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 10 8L7 20V4z"/></svg><span class="text-sm">English</span>
+                  </button>
                 </div>
-            `;
-        }
+              </div>
+            </div>
 
-        function renderLettersScreen() {
-            if (selectedLetter) {
-                return renderLetterPractice(selectedLetter);
-            }
-
-            return `
-                <div class="min-h-screen gradient-bg-2 p-4">
-                    <div class="flex items-center justify-between mb-6">
-                        <button onclick="setMode('home')" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
-                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                            </svg>
-                        </button>
-                        <h2 class="text-2xl font-bold text-white">Bengali Letters</h2>
-                        <div class="w-12"></div>
-                    </div>
-
-                    <div class="grid grid-cols-5 gap-3 max-w-4xl mx-auto">
-                        ${bengaliAlphabet.map((letter, index) => `
-                            <button onclick="selectLetter(bengaliAlphabet[${index}])" class="aspect-square bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl font-bold text-white hover:bg-white/30 hover:scale-105 transition-all duration-300 border-2 border-white/30">
-                                ${letter.bengali}
-                            </button>
-                        `).join('')}
-                    </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
+              <div class="text-center mb-4">
+                <h3 class="text-xl font-bold text-white mb-2">Trace the letter</h3>
+                <div class="flex justify-center space-x-4 mb-4">
+                  <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Clear (keeps saved copy)">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Clear</span>
+                  </button>
+                  <button onclick="resetCurrentTrace()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Delete saved tracing for this letter">Reset tracing</button>
                 </div>
-            `;
-        }
+              </div>
 
-        function renderWordsScreen() {
-            if (selectedWord) {
-                return renderWordPractice(selectedWord);
-            }
+              <div class="relative">
+                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
+                  onmousedown="startDrawing(event)" onmousemove="draw(event)" onmouseup="stopDrawing(event)" onmouseleave="stopDrawing(event)"
+                  ontouchstart="startDrawing(event)" ontouchmove="draw(event)" ontouchend="stopDrawing(event)">
+                  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
+                        class="text-8xl font-bold fill-gray-300" style="font-size: 120px; pointer-events: none;">${letter.bengali}</text>
+                  <g id="drawingCanvas"></g>
+                </svg>
+                <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display:none;"></div>
+              </div>
 
-            return `
-                <div class="min-h-screen gradient-bg-3 p-4">
-                    <div class="flex items-center justify-between mb-6">
-                        <button onclick="setMode('home')" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
-                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                            </svg>
-                        </button>
-                        <h2 class="text-2xl font-bold text-white">Bengali Words</h2>
-                        <div class="w-12"></div>
-                    </div>
+              <div class="flex justify-between items-center mt-6">
+                <button onclick="goToPreviousLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><span>Previous</span></button>
+                <button onclick="goBack()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all">Back to Letters</button>
+                <button onclick="goToNextLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><span>Next</span><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-                    <div class="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
-                        ${bengaliWords.map((word, index) => `
-                            <button onclick="selectWord(bengaliWords[${index}])" class="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white hover:bg-white/30 hover:scale-105 transition-all duration-300 border-2 border-white/30">
-                                <div class="text-3xl font-bold mb-2">${word.bengali}</div>
-                                <div class="text-lg">${word.english}</div>
-                                <div class="text-sm opacity-80">${word.transliteration}</div>
-                            </button>
-                        `).join('')}
-                    </div>
+    function renderWordPractice(word){
+      const idx = bengaliWords.findIndex(w=>w.bengali===word.bengali);
+      return `
+        <div class="min-h-screen gradient-bg-3 p-4">
+          <div class="max-w-4xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+              <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              </button>
+              <h2 class="text-2xl font-bold text-white">Word ${idx+1} of ${bengaliWords.length}</h2>
+              <div class="w-12"></div>
+            </div>
+
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
+              <div class="text-center mb-6">
+                <div class="text-6xl font-bold text-white mb-4">${word.bengali}</div>
+                <div class="text-2xl text-white mb-2">${word.english}</div>
+                <div class="text-xl text-white/80 mb-4">(${word.transliteration})</div>
+                <div class="flex justify-center space-x-4">
+                  <button onclick="playBengaliAudio('${word.audioFile}','word')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 10 8L7 20V4z"/></svg><span class="hidden sm:inline">Bengali</span></button>
+                  <button onclick="speakEnglishText('${word.english}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 10 8L7 20V4z"/></svg><span class="text-sm">English</span></button>
+                  <button onclick="speakEnglishText('${word.transliteration}')" class="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-3 transition-all flex items-center space-x-2"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 10 8L7 20V4z"/></svg><span class="text-xs">Guide</span></button>
                 </div>
-            `;
-        }
+              </div>
+            </div>
 
-        function renderLetterPractice(letter) {
-            const currentIndex = bengaliAlphabet.findIndex(l => l.bengali === letter.bengali);
-            const isFirst = currentIndex === 0;
-            const isLast = currentIndex === bengaliAlphabet.length - 1;
-
-            return `
-                <div class="min-h-screen gradient-bg-2 p-4">
-                    <div class="max-w-4xl mx-auto">
-                        <div class="flex items-center justify-between mb-6">
-                            <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
-                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                                </svg>
-                            </button>
-                            <h2 class="text-2xl font-bold text-white">Letter ${currentIndex + 1} of ${bengaliAlphabet.length}</h2>
-                            <div class="w-12"></div>
-                        </div>
-
-                        <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
-                            <div class="text-center mb-6">
-                                <div class="text-8xl font-bold text-white mb-4">${letter.bengali}</div>
-                                <div class="text-2xl text-white mb-2">Pronunciation: ${letter.pronunciation}</div>
-                                <div class="flex justify-center space-x-4">
-                                    <button onclick="playBengaliAudio('${letter.audioFile}', 'letter')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
-                                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="m7 4 10 8L7 20V4z"/>
-                                        </svg>
-                                        <span class="hidden sm:inline">Bengali</span>
-                                    </button>
-                                    <button onclick="speakEnglishText('${letter.pronunciation}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English pronunciation guide">
-                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="m7 4 10 8L7 20V4z"/>
-                                        </svg>
-                                        <span class="text-sm">English</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
-                            <div class="text-center mb-4">
-                                <h3 class="text-xl font-bold text-white mb-2">Trace the letter</h3>
-                                <div class="flex justify-center space-x-4 mb-4">
-                                    <button onclick="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2">
-                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                                            <path d="M3 3v5h5"/>
-                                        </svg>
-                                        <span>Clear</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="relative">
-                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
-                                     onmousedown="startDrawing(event)"
-                                     onmousemove="draw(event)"
-                                     onmouseup="stopDrawing(event)"
-                                     onmouseleave="stopDrawing(event)"
-                                     ontouchstart="startDrawing(event)"
-                                     ontouchmove="draw(event)"
-                                     ontouchend="stopDrawing(event)">
-                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-8xl font-bold fill-gray-300" style="font-size: 120px; pointer-events: none;">
-                                        ${letter.bengali}
-                                    </text>
-                                    <g id="drawingCanvas"></g>
-                                </svg>
-
-                                <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display: none;"></div>
-                            </div>
-
-                            <div class="flex justify-between items-center mt-6">
-                                <button onclick="goToPreviousLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Previous letter">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="m15 18-6-6 6-6"/>
-                                    </svg>
-                                    <span>Previous</span>
-                                </button>
-
-                                <button onclick="goBack()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all">
-                                    Back to Letters
-                                </button>
-
-                                <button onclick="goToNextLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Next letter">
-                                    <span>Next</span>
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="m9 18 6-6-6-6"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
+              <div class="text-center mb-4">
+                <h3 class="text-xl font-bold text-white mb-2">Trace the word</h3>
+                <div class="flex justify-center space-x-4 mb-4">
+                  <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Clear</span>
+                  </button>
+                  <button onclick="resetCurrentTrace()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Delete saved tracing for this word">Reset tracing</button>
                 </div>
-            `;
-        }
+              </div>
 
-        function renderWordPractice(word) {
-            const currentIndex = bengaliWords.findIndex(w => w.bengali === word.bengali);
-            const isFirst = currentIndex === 0;
-            const isLast = currentIndex === bengaliWords.length - 1;
+              <div class="relative">
+                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
+                  onmousedown="startDrawing(event)" onmousemove="draw(event)" onmouseup="stopDrawing(event)" onmouseleave="stopDrawing(event)"
+                  ontouchstart="startDrawing(event)" ontouchmove="draw(event)" ontouchend="stopDrawing(event)">
+                  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
+                        class="text-6xl font-bold fill-gray-300" style="font-size: 80px; pointer-events: none;">${word.bengali}</text>
+                  <g id="drawingCanvas"></g>
+                </svg>
+                <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display:none;"></div>
+              </div>
 
-            return `
-                <div class="min-h-screen gradient-bg-3 p-4">
-                    <div class="max-w-4xl mx-auto">
-                        <div class="flex items-center justify-between mb-6">
-                            <button onclick="goBack()" class="bg-white/20 rounded-full p-3 text-white hover:bg-white/30 transition-all">
-                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                                </svg>
-                            </button>
-                            <h2 class="text-2xl font-bold text-white">Word ${currentIndex + 1} of ${bengaliWords.length}</h2>
-                            <div class="w-12"></div>
-                        </div>
+              <div class="flex justify-between items-center mt-6">
+                <button onclick="goToPreviousWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><span>Previous</span></button>
+                <button onclick="goBack()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full font-semibold transition-all">Back to Words</button>
+                <button onclick="goToNextWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><span>Next</span><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-                        <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl font-bold text-white mb-4">${word.bengali}</div>
-                                <div class="text-2xl text-white mb-2">${word.english}</div>
-                                <div class="text-xl text-white/80 mb-4">(${word.transliteration})</div>
-                                <div class="flex justify-center space-x-4">
-                                    <button onclick="playBengaliAudio('${word.audioFile}', 'word')" class="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play Bengali pronunciation">
-                                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="m7 4 10 8L7 20V4z"/>
-                                        </svg>
-                                        <span class="hidden sm:inline">Bengali</span>
-                                    </button>
-                                    <button onclick="speakEnglishText('${word.english}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play English translation">
-                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="m7 4 10 8L7 20V4z"/>
-                                        </svg>
-                                        <span class="text-sm">English</span>
-                                    </button>
-                                    <button onclick="speakEnglishText('${word.transliteration}')" class="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-3 transition-all flex items-center space-x-2" title="Play transliteration guide">
-                                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="m7 4 10 8L7 20V4z"/>
-                                        </svg>
-                                        <span class="text-xs">Guide</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+    function render(){
+      const app = document.getElementById('app');
+      if(currentMode==='home'){ app.innerHTML = renderHomeScreen(); return; }
+      if(currentMode==='letters'){ app.innerHTML = renderLettersScreen(); }
+      if(currentMode==='words'){ app.innerHTML = renderWordsScreen(); }
 
-                        <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
-                            <div class="text-center mb-4">
-                                <h3 class="text-xl font-bold text-white mb-2">Trace the word</h3>
-                                <div class="flex justify-center space-x-4 mb-4">
-                                    <button onclick="clearCanvas()" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2">
-                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                                            <path d="M3 3v5h5"/>
-                                        </svg>
-                                        <span>Clear</span>
-                                    </button>
-                                </div>
-                            </div>
+      // After DOM is painted, if we’re on a practice screen, restore saved trace
+      requestAnimationFrame(() => {
+        if(selectedLetter || selectedWord) loadTraceForCurrent();
+      });
+    }
 
-                            <div class="relative">
-                                <svg width="100%" height="300" class="bg-white rounded-xl border-4 border-dashed border-white/50 drawing-canvas"
-                                     onmousedown="startDrawing(event)"
-                                     onmousemove="draw(event)"
-                                     onmouseup="stopDrawing(event)"
-                                     onmouseleave="stopDrawing(event)"
-                                     ontouchstart="startDrawing(event)"
-                                     ontouchmove="draw(event)"
-                                     ontouchend="stopDrawing(event)">
-                                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="text-6xl font-bold fill-gray-300" style="font-size: 80px; pointer-events: none;">
-                                        ${word.bengali}
-                                    </text>
-                                    <g id="drawingCanvas"></g>
-                                </svg>
-
-                                <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display: none;"></div>
-                            </div>
-
-                            <div class="flex justify-between items-center mt-6">
-                                <button onclick="goToPreviousWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Previous word">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="m15 18-6-6 6-6"/>
-                                    </svg>
-                                    <span>Previous</span>
-                                </button>
-
-                                <button onclick="goBack()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full font-semibold transition-all">
-                                    Back to Words
-                                </button>
-
-                                <button onclick="goToNextWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2" title="Next word">
-                                    <span>Next</span>
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="m9 18 6-6-6-6"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function render() {
-            const app = document.getElementById('app');
-            
-            if (currentMode === 'home') {
-                app.innerHTML = renderHomeScreen();
-            } else if (currentMode === 'letters') {
-                app.innerHTML = renderLettersScreen();
-            } else if (currentMode === 'words') {
-                app.innerHTML = renderWordsScreen();
-            }
-        }
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            render();
-        });
-    </script>
+    // Init
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
 </body>
 </html>
