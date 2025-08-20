@@ -71,12 +71,15 @@
 
     /* ====== Scoring tunables ====== */
     const SCORE_CFG = {
-      drawStrokeWidth: 100,     // tolerance for child strokes (px)
-      edgeStrokeWidth: 100,    // thickness of "outline" to hit (px)
-      letterFontSize: 120,    // should match on-screen guide
-      wordFontSize: 80,       // should match on-screen guide
-      minDrawPixels: 150      // require "enough" drawing before giving high scores
+      drawStrokeWidth: 8,
+      edgeStrokeWidth: 14,
+      letterFontSize: 120,
+      wordFontSize: 80,
+      minDrawPixels: 500,
+      neatnessTolerancePx: 12  // ↑ raise to be less strict (e.g., 16–20)
     };
+
+
 
     /************** Data (unchanged lists) **************/
     const bengaliAlphabet = [
@@ -476,29 +479,37 @@
       showScorePanel(result);
     }
 
-    function evaluateTracing({ text, kind, isLetter }){
+    function evaluateTracing({ text, kind, isLetter }) {
+      // Canvas size from the live SVG box
       const box = document.querySelector('.drawing-canvas');
       const rect = box.getBoundingClientRect();
       const W = Math.max(1, Math.round(rect.width));
       const H = Math.max(1, Math.round(rect.height));
 
-      // Canvases
-      const cRef  = document.createElement('canvas'); cRef.width=W;  cRef.height=H; const ctxR = cRef.getContext('2d');
-      const cEdge = document.createElement('canvas'); cEdge.width=W; cEdge.height=H; const ctxE = cEdge.getContext('2d');
-      const cDraw = document.createElement('canvas'); cDraw.width=W; cDraw.height=H; const ctxD = cDraw.getContext('2d');
-
-      // Fonts (browser shapes Bengali correctly)
+      // Font setup first (so nothing references undeclared vars)
       const fontSize = isLetter ? SCORE_CFG.letterFontSize : SCORE_CFG.wordFontSize;
       const families = "'Noto Sans Bengali','Bangla Sangam MN','Hind Siliguri','Mukta','Mukta Mahee',sans-serif";
+      const halo = (typeof SCORE_CFG.neatnessTolerancePx === 'number') ? SCORE_CFG.neatnessTolerancePx : 10;
 
-      // Reference filled area
+      // --- Canvases
+      const cRef  = document.createElement('canvas'); cRef.width  = W; cRef.height  = H;
+      const cEdge = document.createElement('canvas'); cEdge.width = W; cEdge.height = H;
+      const cDraw = document.createElement('canvas'); cDraw.width = W; cDraw.height = H;
+      const cTol  = document.createElement('canvas'); cTol.width  = W; cTol.height  = H;
+
+      const ctxR = cRef.getContext('2d');
+      const ctxE = cEdge.getContext('2d');
+      const ctxD = cDraw.getContext('2d');
+      const ctxT = cTol.getContext('2d');
+
+      // --- Reference filled shape (strict interior)
       ctxR.fillStyle = 'black';
       ctxR.textAlign = 'center';
       ctxR.textBaseline = 'middle';
       ctxR.font = `700 ${fontSize}px ${families}`;
       ctxR.fillText(text, W/2, H/2);
 
-      // Reference outline (edge) — what we want kids to trace
+      // --- Reference outline (what we want them to trace)
       ctxE.strokeStyle = 'black';
       ctxE.lineWidth = SCORE_CFG.edgeStrokeWidth;
       ctxE.lineJoin = 'round';
@@ -508,32 +519,53 @@
       ctxE.font = `700 ${fontSize}px ${families}`;
       ctxE.strokeText(text, W/2, H/2);
 
-      // Child strokes (render SVG paths to canvas)
+      // --- Tolerant mask for neatness = fill + fat outline ("halo")
+      ctxT.fillStyle = 'black';
+      ctxT.textAlign = 'center';
+      ctxT.textBaseline = 'middle';
+      ctxT.font = `700 ${fontSize}px ${families}`;
+      ctxT.fillText(text, W/2, H/2);
+      ctxT.strokeStyle = 'black';
+      ctxT.lineWidth = halo * 2; // radius on both sides
+      ctxT.lineJoin = 'round';
+      ctxT.lineCap  = 'round';
+      ctxT.strokeText(text, W/2, H/2);
+
+      // --- Child strokes (render SVG path data)
       ctxD.strokeStyle = 'black';
       ctxD.lineWidth = SCORE_CFG.drawStrokeWidth;
       ctxD.lineJoin = 'round';
       ctxD.lineCap = 'round';
-      for(const d of paths){ if(!d) continue; const p = new Path2D(d); ctxD.stroke(p); }
-
-      // Pixel stats
-      const refData  = ctxR.getImageData(0,0,W,H).data;
-      const edgeData = ctxE.getImageData(0,0,W,H).data;
-      const drawData = ctxD.getImageData(0,0,W,H).data;
-
-      let totalDraw=0, onTarget=0, edgeHit=0, edgeTotal=0;
-      for(let i=3;i<drawData.length;i+=4){
-        const dA = drawData[i] > 0;
-        const rA = refData[i]  > 0;
-        const eA = edgeData[i] > 0;
-        if(dA) totalDraw++;
-        if(eA) edgeTotal++;
-        if(dA && rA) onTarget++;
-        if(dA && eA) edgeHit++;
+      for (const d of paths) {
+        if (!d) continue;
+        const p = new Path2D(d);
+        ctxD.stroke(p);
       }
 
-      const neatness = totalDraw ? onTarget/totalDraw : 0;           // stay on the shape
-      const edgeCoverage = edgeTotal ? edgeHit/edgeTotal : 0;         // coverage of outline
-      let score = Math.round(100*(0.6*edgeCoverage + 0.4*neatness));
+      // --- Pixel data (after all canvases are drawn)
+      const refData  = ctxR.getImageData(0, 0, W, H).data;  // strict fill
+      const edgeData = ctxE.getImageData(0, 0, W, H).data;  // outline band
+      const drawData = ctxD.getImageData(0, 0, W, H).data;  // child strokes
+      const tolData  = ctxT.getImageData(0, 0, W, H).data;  // tolerant fill+halo
+
+      // --- Stats
+      let totalDraw = 0, onTarget = 0, edgeHit = 0, edgeTotal = 0;
+
+      for (let i = 3; i < drawData.length; i += 4) {
+        const dA = drawData[i] > 0;  // anything the child drew
+        const eA = edgeData[i] > 0;  // outline band pixel
+        const tA = tolData[i] > 0;   // tolerant "on-target" area
+
+        if (dA) totalDraw++;
+        if (eA) edgeTotal++;
+        if (dA && tA) onTarget++;   // <-- use tolerant mask for neatness
+        if (dA && eA) edgeHit++;
+      }
+
+      const neatness = totalDraw ? onTarget / totalDraw : 0;
+      const edgeCoverage = edgeTotal ? edgeHit / edgeTotal : 0;
+
+      let score = Math.round(100 * (0.6 * edgeCoverage + 0.4 * neatness));
       if (totalDraw < SCORE_CFG.minDrawPixels) score = Math.min(score, 40);
 
       const tips = [];
@@ -544,12 +576,13 @@
 
       return {
         score,
-        neatness: Math.round(neatness*100),
-        outline: Math.round(edgeCoverage*100),
+        neatness: Math.round(neatness * 100),
+        outline: Math.round(edgeCoverage * 100),
         strokes: paths.length,
         tips
       };
     }
+
 
     function showScorePanel(res){
       const panel = document.getElementById('scorePanel');
