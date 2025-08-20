@@ -69,6 +69,15 @@
 
     const AUTOSAVE_ON_DRAW_END = true;
 
+    /* ====== Scoring tunables ====== */
+    const SCORE_CFG = {
+      drawStrokeWidth: 8,     // tolerance for child strokes (px)
+      edgeStrokeWidth: 14,    // thickness of "outline" to hit (px)
+      letterFontSize: 120,    // should match on-screen guide
+      wordFontSize: 80,       // should match on-screen guide
+      minDrawPixels: 500      // require "enough" drawing before giving high scores
+    };
+
     /************** Data (unchanged lists) **************/
     const bengaliAlphabet = [
       { bengali:'অ',english:'a',pronunciation:'aw',audioFile:'aw.wav' },
@@ -203,7 +212,6 @@
       if(!raw){ updateCanvas(); return; }
       try{
         const data = JSON.parse(raw);
-        // Scale paths to current canvas size if needed
         const box = document.querySelector('.drawing-canvas');
         const rect = box?.getBoundingClientRect();
         if(rect && data.w && data.h && (data.w!==Math.round(rect.width) || data.h!==Math.round(rect.height))){
@@ -222,7 +230,6 @@
       clearCanvas();
     }
     function scalePath(d, sx, sy){
-      // only supports "M x y L x y L x y ..." which is what we generate
       return d.replace(/([ML])\s*([\d.]+)\s*([\d.]+)/g, (_, cmd, x, y) => {
         const nx = (parseFloat(x)*sx).toFixed(2);
         const ny = (parseFloat(y)*sy).toFixed(2);
@@ -317,30 +324,25 @@
       clearCanvas(); render();
     }
 
-    // --- ADD this helper ---
-function makeTitleSVG(title, width = 1200, height = 140) {
-  // Use common Bengali-capable fonts if present; browser will shape correctly
-  const family = `'Noto Sans Bengali','Bangla Sangam MN','SolaimanLipi','Hind Siliguri','Mukta','Mukta Mahee',sans-serif`;
-  const safe = escapeXml(title);
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-      <rect width="100%" height="100%" fill="white"/>
-      <text x="40" y="${Math.round(height*0.65)}"
-            fill="#111" font-size="64" font-weight="700"
-            style="font-family:${family};">${safe}</text>
-    </svg>
-  `;
-}
-
-// --- ADD this helper ---
-async function titleToPngDataURL(title) {
-  const width = 1200, height = 140;
-  const svg = makeTitleSVG(title, width, height);
-  const dataURL = await svgToPngDataURL(svg, width, height);
-  return { dataURL, width, height };
-}
-
-    // --- REPLACE your downloadAllTracingsPDF with this ---
+    /************** PDF Export (with Bengali-safe title) **************/
+    function makeTitleSVG(title, width = 1200, height = 140) {
+      const family = `'Noto Sans Bengali','Bangla Sangam MN','Hind Siliguri','Mukta','Mukta Mahee',sans-serif`;
+      const safe = escapeXml(title);
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <rect width="100%" height="100%" fill="white"/>
+          <text x="40" y="${Math.round(height*0.65)}"
+                fill="#111" font-size="64" font-weight="700"
+                style="font-family:${family};">${safe}</text>
+        </svg>
+      `;
+    }
+    async function titleToPngDataURL(title) {
+      const width = 1200, height = 140;
+      const svg = makeTitleSVG(title, width, height);
+      const dataURL = await svgToPngDataURL(svg, width, height);
+      return { dataURL, width, height };
+    }
     async function downloadAllTracingsPDF(){
       const jsPDF = window.jspdf?.jsPDF;
       if(!jsPDF){ alert('PDF library not loaded yet. Please try again in a moment.'); return; }
@@ -362,17 +364,14 @@ async function titleToPngDataURL(title) {
         const raw = localStorage.getItem(key);
         if(!raw) continue;
 
-        // Title as image to preserve Bengali shaping
         const title = `${it.kind === 'letter' ? 'Letter' : 'Word'}: ${it.label}`;
         const { dataURL: tURL, width: tW, height: tH } = await titleToPngDataURL(title);
 
-        // Main preview (your existing overlay render → PNG)
         const { svgString, width, height } = makeSVGPreview(it.kind, it.display, raw);
         const imgDataURL = await svgToPngDataURL(svgString, width, height);
 
         if(placed){ doc.addPage({orientation:'landscape'}); } else { placed = true; }
 
-        // place title (scale to page width minus margins)
         const maxTW = pageW - margin*2;
         const tScale = Math.min(1, maxTW / tW);
         const drawTW = tW * tScale, drawTH = tH * tScale;
@@ -380,7 +379,6 @@ async function titleToPngDataURL(title) {
         const titleY = margin;
         doc.addImage(tURL, 'PNG', titleX, titleY, drawTW, drawTH);
 
-        // place main image below title
         const top = titleY + drawTH + 10;
         const maxW = pageW - margin*2;
         const maxH = pageH - top - margin;
@@ -395,9 +393,8 @@ async function titleToPngDataURL(title) {
       doc.save('bengali-tracings.pdf');
     }
 
-
+    /************** SVG preview used for PDF **************/
     function makeSVGPreview(kind, displayText, rawSaved){
-      // Target render size for PDF preview image
       const width = 1000, height = 400;
 
       let saved = null;
@@ -446,6 +443,110 @@ async function titleToPngDataURL(title) {
         img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
         img.src = url;
       });
+    }
+
+    /************** Scoring **************/
+    function assessCurrentTracing(){
+      const isLetter = !!selectedLetter;
+      const isWord   = !!selectedWord;
+      if(!isLetter && !isWord){ showFeedbackTimed('Open a letter or a word first', 2000); return; }
+
+      const text = isLetter ? selectedLetter.bengali : selectedWord.bengali;
+      const kind = isLetter ? 'letter' : 'word';
+      const result = evaluateTracing({ text, kind, isLetter });
+
+      showScorePanel(result);
+    }
+
+    function evaluateTracing({ text, kind, isLetter }){
+      const box = document.querySelector('.drawing-canvas');
+      const rect = box.getBoundingClientRect();
+      const W = Math.max(1, Math.round(rect.width));
+      const H = Math.max(1, Math.round(rect.height));
+
+      // Canvases
+      const cRef  = document.createElement('canvas'); cRef.width=W;  cRef.height=H; const ctxR = cRef.getContext('2d');
+      const cEdge = document.createElement('canvas'); cEdge.width=W; cEdge.height=H; const ctxE = cEdge.getContext('2d');
+      const cDraw = document.createElement('canvas'); cDraw.width=W; cDraw.height=H; const ctxD = cDraw.getContext('2d');
+
+      // Fonts (browser shapes Bengali correctly)
+      const fontSize = isLetter ? SCORE_CFG.letterFontSize : SCORE_CFG.wordFontSize;
+      const families = "'Noto Sans Bengali','Bangla Sangam MN','Hind Siliguri','Mukta','Mukta Mahee',sans-serif";
+
+      // Reference filled area
+      ctxR.fillStyle = 'black';
+      ctxR.textAlign = 'center';
+      ctxR.textBaseline = 'middle';
+      ctxR.font = `700 ${fontSize}px ${families}`;
+      ctxR.fillText(text, W/2, H/2);
+
+      // Reference outline (edge) — what we want kids to trace
+      ctxE.strokeStyle = 'black';
+      ctxE.lineWidth = SCORE_CFG.edgeStrokeWidth;
+      ctxE.lineJoin = 'round';
+      ctxE.lineCap = 'round';
+      ctxE.textAlign = 'center';
+      ctxE.textBaseline = 'middle';
+      ctxE.font = `700 ${fontSize}px ${families}`;
+      ctxE.strokeText(text, W/2, H/2);
+
+      // Child strokes (render SVG paths to canvas)
+      ctxD.strokeStyle = 'black';
+      ctxD.lineWidth = SCORE_CFG.drawStrokeWidth;
+      ctxD.lineJoin = 'round';
+      ctxD.lineCap = 'round';
+      for(const d of paths){ if(!d) continue; const p = new Path2D(d); ctxD.stroke(p); }
+
+      // Pixel stats
+      const refData  = ctxR.getImageData(0,0,W,H).data;
+      const edgeData = ctxE.getImageData(0,0,W,H).data;
+      const drawData = ctxD.getImageData(0,0,W,H).data;
+
+      let totalDraw=0, onTarget=0, edgeHit=0, edgeTotal=0;
+      for(let i=3;i<drawData.length;i+=4){
+        const dA = drawData[i] > 0;
+        const rA = refData[i]  > 0;
+        const eA = edgeData[i] > 0;
+        if(dA) totalDraw++;
+        if(eA) edgeTotal++;
+        if(dA && rA) onTarget++;
+        if(dA && eA) edgeHit++;
+      }
+
+      const neatness = totalDraw ? onTarget/totalDraw : 0;           // stay on the shape
+      const edgeCoverage = edgeTotal ? edgeHit/edgeTotal : 0;         // coverage of outline
+      let score = Math.round(100*(0.6*edgeCoverage + 0.4*neatness));
+      if (totalDraw < SCORE_CFG.minDrawPixels) score = Math.min(score, 40);
+
+      const tips = [];
+      if (totalDraw < SCORE_CFG.minDrawPixels) tips.push("Add more strokes to cover the whole shape.");
+      if (neatness < 0.6) tips.push("Stay closer to the grey shape.");
+      if (edgeCoverage < 0.6) tips.push("Try to trace around the outline fully.");
+      if (!tips.length) tips.push("Great control! Try even smoother, slower lines.");
+
+      return {
+        score,
+        neatness: Math.round(neatness*100),
+        outline: Math.round(edgeCoverage*100),
+        strokes: paths.length,
+        tips
+      };
+    }
+
+    function showScorePanel(res){
+      const panel = document.getElementById('scorePanel');
+      if(!panel){
+        alert(`Score: ${res.score}/100\nOn-target: ${res.neatness}%\nOutline: ${res.outline}%\nTips:\n- ${res.tips.join('\n- ')}`);
+        return;
+      }
+      panel.innerHTML = `
+        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-white">
+          <div class="text-lg font-bold">Score: ${res.score}/100</div>
+          <div class="text-sm">On-target neatness: ${res.neatness}% · Outline coverage: ${res.outline}% · Strokes: ${res.strokes}</div>
+          <ul class="text-sm mt-2">${res.tips.map(t=>`<li>• ${t}</li>`).join('')}</ul>
+        </div>`;
+      panel.style.display='block';
+      setTimeout(()=>{ if(panel) panel.style.display='none'; }, 6000);
     }
 
     /************** Render **************/
@@ -565,6 +666,7 @@ async function titleToPngDataURL(title) {
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Clear</span>
                   </button>
                   <button onclick="resetCurrentTrace()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Delete saved tracing for this letter">Reset tracing</button>
+                  <button onclick="assessCurrentTracing()" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Score this tracing">Check my tracing</button>
                 </div>
               </div>
 
@@ -578,6 +680,8 @@ async function titleToPngDataURL(title) {
                 </svg>
                 <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display:none;"></div>
               </div>
+
+              <div id="scorePanel" class="mt-3" style="display:none;"></div>
 
               <div class="flex justify-between items-center mt-6">
                 <button onclick="goToPreviousLetter()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><span>Previous</span></button>
@@ -624,6 +728,7 @@ async function titleToPngDataURL(title) {
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span>Clear</span>
                   </button>
                   <button onclick="resetCurrentTrace()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Delete saved tracing for this word">Reset tracing</button>
+                  <button onclick="assessCurrentTracing()" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Score this tracing">Check my tracing</button>
                 </div>
               </div>
 
@@ -637,6 +742,8 @@ async function titleToPngDataURL(title) {
                 </svg>
                 <div id="feedback" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-semibold animate-bounce" style="display:none;"></div>
               </div>
+
+              <div id="scorePanel" class="mt-3" style="display:none;"></div>
 
               <div class="flex justify-between items-center mt-6">
                 <button onclick="goToPreviousWord()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-full font-semibold transition-all flex items-center space-x-2"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><span>Previous</span></button>
@@ -654,8 +761,6 @@ async function titleToPngDataURL(title) {
       if(currentMode==='home'){ app.innerHTML = renderHomeScreen(); return; }
       if(currentMode==='letters'){ app.innerHTML = renderLettersScreen(); }
       if(currentMode==='words'){ app.innerHTML = renderWordsScreen(); }
-
-      // After DOM is painted, if we’re on a practice screen, restore saved trace
       requestAnimationFrame(() => {
         if(selectedLetter || selectedWord) loadTraceForCurrent();
       });
