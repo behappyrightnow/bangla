@@ -225,30 +225,42 @@
       if(!key) return;
       const box = document.querySelector('.drawing-canvas');
       if(!box) return;
-      const rect = box.getBoundingClientRect();
-      const payload = { w: Math.round(rect.width), h: Math.round(rect.height), paths: [...paths] };
-      try{ localStorage.setItem(key, JSON.stringify(payload)); }catch(e){ console.warn('Save failed', e); }
+
+      // ✅ content box (excludes border)
+      const width  = box.clientWidth;
+      const height = box.clientHeight;
+
+      const payload = { w: width, h: height, paths: [...paths] };
+      try { localStorage.setItem(key, JSON.stringify(payload)); } catch(e){ console.warn('Save failed', e); }
     }
+
     function loadTraceForCurrent(){
       const { key } = getCurrentKindAndKey();
-      if(!key) { paths=[]; return; }
+      if(!key) { paths = []; return; }
       const raw = localStorage.getItem(key);
       paths = [];
       if(!raw){ updateCanvas(); return; }
+
       try{
         const data = JSON.parse(raw);
         const box = document.querySelector('.drawing-canvas');
-        const rect = box?.getBoundingClientRect();
-        if(rect && data.w && data.h && (data.w!==Math.round(rect.width) || data.h!==Math.round(rect.height))){
-          const sx = rect.width  / data.w;
-          const sy = rect.height / data.h;
-          paths = data.paths.map(p => scalePath(p, sx, sy));
+
+        // ✅ content box (excludes border)
+        const cw = box.clientWidth;
+        const ch = box.clientHeight;
+
+        if (data.w && data.h && (data.w !== cw || data.h !== ch)) {
+          const sx = cw / data.w;
+          const sy = ch / data.h;
+          paths = (data.paths || []).map(p => scalePath(p, sx, sy));
         } else {
           paths = data.paths || [];
         }
-      }catch(e){ console.warn('Load failed', e); paths=[]; }
+      } catch(e){ console.warn('Load failed', e); paths = []; }
+
       updateCanvas();
     }
+
 
     function scalePath(d, sx, sy){
       return d.replace(/([ML])\s*([\d.]+)\s*([\d.]+)/g, (_, cmd, x, y) => {
@@ -260,12 +272,26 @@
 
     /************** Drawing **************/
     function getBoxAndXY(e){
-      const canvas = document.querySelector('.drawing-canvas');
-      const rect = canvas.getBoundingClientRect();
-      const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) - rect.left;
-      const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) - rect.top;
-      return { x: Math.max(0, Math.min(rect.width,  cx)), y: Math.max(0, Math.min(rect.height, cy)) };
+      const svg = document.querySelector('.drawing-canvas');
+      const rect = svg.getBoundingClientRect();
+
+      // ✅ subtract CSS border to get into content box coords
+      const cs = getComputedStyle(svg);
+      const bl = parseFloat(cs.borderLeftWidth) || 0;
+      const bt = parseFloat(cs.borderTopWidth)  || 0;
+
+      const cx = (e.clientX ?? (e.touches && e.touches[0]?.clientX)) - rect.left - bl;
+      const cy = (e.clientY ?? (e.touches && e.touches[0]?.clientY)) - rect.top  - bt;
+
+      // ✅ clamp to content box size
+      const w = svg.clientWidth;
+      const h = svg.clientHeight;
+
+      const x = Math.max(0, Math.min(w, cx));
+      const y = Math.max(0, Math.min(h, cy));
+      return { x, y };
     }
+
     function startDrawing(e){
       e.preventDefault(); isDrawing = true;
       const { x, y } = getBoxAndXY(e);
@@ -413,36 +439,70 @@
       if(!placed){ alert('No saved tracings yet!'); return; }
       doc.save('bengali-tracings.pdf');
     }
+    function offsetPath(d, dx, dy){
+      return d.replace(/([ML])\s*([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)/g,
+        (_, cmd, x, y) => `${cmd} ${(parseFloat(x)+dx).toFixed(2)} ${(parseFloat(y)+dy).toFixed(2)}`);
+    }
+
+    // Export-only calibration so PDF overlay matches the silhouette
+    const EXPORT_ADJUST = {
+      sx: 1, // 1.0 = no scale. Raise slightly if tracing looks smaller than silhouette
+      sy: 1, // you can tune X/Y independently if needed
+      dx: 0,     // pixels to the right  (use your previous nudge)
+      dy: 0     // pixels up (negative goes up)
+    };
+
 
     /************** SVG preview used for PDF **************/
-    function makeSVGPreview(kind, displayText, rawSaved){
-      const width = 1000, height = 400;
-
-      let saved = null;
-      try{ saved = JSON.parse(rawSaved); }catch{ saved = null; }
-      const sx = saved?.w ? width/saved.w : 1;
-      const sy = saved?.h ? height/saved.h : 1;
-      const scaledPaths = (saved?.paths || []).map(p => scalePath(p, sx, sy));
-
-      const fontSize = kind === 'letter' ? 220 : 150;
-      const textY     = kind === 'letter' ? height/2 + 20 : height/2 + 6;
-
-      const pathElems = scaledPaths.map(p =>
-        `<path d="${p}" stroke="#2563EB" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
-      ).join('');
-
-      const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-          <rect width="100%" height="100%" fill="white"/>
-          <text x="50%" y="${textY}" text-anchor="middle" dominant-baseline="central"
-                fill="#d1d5db" font-size="${fontSize}" font-weight="700" style="font-family: sans-serif;">
-            ${escapeXml(displayText)}
-          </text>
-          ${pathElems}
-        </svg>`;
-
-      return { svgString: svg, width, height };
+    function transformPath(d, { sx=1, sy=1, dx=0, dy=0, cx=0, cy=0 } = {}) {
+      return d.replace(
+        /([ML])\s*([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)/g,
+        (_, cmd, xs, ys) => {
+          const x = parseFloat(xs), y = parseFloat(ys);
+          const nx = cx + sx * (x - cx) + dx;
+          const ny = cy + sy * (y - cy) + dy;
+          return `${cmd} ${nx.toFixed(2)} ${ny.toFixed(2)}`;
+        }
+      );
     }
+
+    function makeSVGPreview(kind, displayText, rawSaved){
+      let saved = null;
+      try { saved = JSON.parse(rawSaved); } catch {}
+      const baseW = saved?.w || 1000;
+      const baseH = saved?.h || 300;
+      const baseFont = (kind === 'letter') ? 120 : 80;
+
+      const cx = baseW / 2, cy = baseH / 2;
+
+      const pathElems = (saved?.paths || [])
+        .map(p => transformPath(p, {
+          sx: EXPORT_ADJUST.sx, sy: EXPORT_ADJUST.sy,
+          dx: EXPORT_ADJUST.dx, dy: EXPORT_ADJUST.dy,
+          cx, cy
+        }))
+        .map(p => `<path d="${p}" stroke="#2563EB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`)
+        .join('');
+
+      return {
+        svgString:
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${baseW}" height="${baseH}"
+                viewBox="0 0 ${baseW} ${baseH}" preserveAspectRatio="xMidYMid meet">
+             <rect width="100%" height="100%" fill="white"/>
+             <text x="${baseW/2}" y="${baseH/2}" text-anchor="middle" dominant-baseline="central"
+                   fill="#d1d5db" font-size="${baseFont}" font-weight="700" style="font-family: sans-serif;">
+               ${escapeXml(displayText)}
+             </text>
+             ${pathElems}
+           </svg>`,
+        width: baseW,
+        height: baseH
+      };
+    }
+
+
+
+
 
     function escapeXml(s){
       return String(s).replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
