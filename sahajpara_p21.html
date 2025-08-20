@@ -71,11 +71,11 @@
 
     /* ====== Scoring tunables ====== */
     const SCORE_CFG = {
-      drawStrokeWidth: 16,     // tolerance for child strokes (px)
-      edgeStrokeWidth: 25,    // thickness of "outline" to hit (px)
+      drawStrokeWidth: 100,     // tolerance for child strokes (px)
+      edgeStrokeWidth: 100,    // thickness of "outline" to hit (px)
       letterFontSize: 120,    // should match on-screen guide
       wordFontSize: 80,       // should match on-screen guide
-      minDrawPixels: 500      // require "enough" drawing before giving high scores
+      minDrawPixels: 150      // require "enough" drawing before giving high scores
     };
 
     /************** Data (unchanged lists) **************/
@@ -169,6 +169,28 @@
       {"bengali":"খুশি","english":"happy","transliteration":"khuśi","audioFile":"khuśi.wav"},
       {"bengali":"হল","english":"became","transliteration":"holo","audioFile":"holo.wav"}
     ];
+
+    function undoLastStroke(){
+      // If a stroke is in progress, cancel it
+      if (isDrawing && currentPath) {
+        isDrawing = false;
+        currentPath = '';
+        updateCanvas();
+        showFeedbackTimed('Undid current stroke', 1200);
+        return;
+      }
+
+      // Otherwise, remove the last completed stroke
+      if (paths.length > 0) {
+        paths.pop();
+        updateCanvas();
+        // keep your per-item persistence consistent
+        saveCurrentTrace();
+        showFeedbackTimed('Undid last stroke', 1200);
+      } else {
+        showFeedbackTimed('Nothing to undo', 1200);
+      }
+    }
 
     /************** Audio (unchanged) **************/
     function playBengaliAudio(audioFile, type='letter'){
@@ -659,15 +681,20 @@
                 <h3 class="text-xl font-bold text-white mb-2">Trace the letter</h3>
                 <div class="flex justify-center space-x-4 mb-4">
                   <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Clear (keeps saved copy)">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-                    </svg>
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                     <span>Clear</span>
                   </button>
+
+                  <button onclick="undoLastStroke()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Undo last stroke">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 5a7.5 7.5 0 1 1-7.06 9.99"/><path d="M9 8H4V3"/></svg>
+                    <span>Undo</span>
+                  </button>
+
                   <button onclick="assessCurrentTracing()" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Score this tracing">
                     Check my tracing
                   </button>
                 </div>
+
 
               </div>
 
@@ -725,16 +752,21 @@
               <div class="text-center mb-4">
                 <h3 class="text-xl font-bold text-white mb-2">Trace the word</h3>
                 <div class="flex justify-center space-x-4 mb-4">
-                  <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-                    </svg>
+                  <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Clear (keeps saved copy)">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                     <span>Clear</span>
                   </button>
+
+                  <button onclick="undoLastStroke()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Undo last stroke">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 5a7.5 7.5 0 1 1-7.06 9.99"/><path d="M9 8H4V3"/></svg>
+                    <span>Undo</span>
+                  </button>
+
                   <button onclick="assessCurrentTracing()" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-2 font-semibold transition-all" title="Score this tracing">
                     Check my tracing
                   </button>
                 </div>
+
 
               </div>
 
