@@ -7,6 +7,7 @@
 
   <!-- jsPDF (for PDF export) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://unpkg.com/meyda@5.6.3/dist/web/meyda.min.js" defer></script>
 
   <style>
     /* ===== Your original styles (unchanged) ===== */
@@ -68,6 +69,32 @@
     let feedback = '';
 
     const AUTOSAVE_ON_DRAW_END = true;
+
+    // ===== Pronunciation assessment config =====
+    const PRONUN_CFG = {
+      frameSize: 1024,
+      hopSize: 512,
+      mfccCount: 13,
+      distanceScale: 5,   // ↓ make smaller to be stricter, bigger to be more forgiving
+      minDurationSec: 0.40, // refuse very short attempts
+      silenceRms: 0.01      // how loud a frame must be to count as speech
+    };
+
+    // Recording via AudioWorklet (portable across browsers)
+    let mediaStream = null;
+    let msSource = null;
+    let workletNode = null;
+    let pcmChunks = [];                    // array of Float32Array frames
+    let userPronunciationPCM = null;       // Float32Array (mono)
+    let userPronunciationSR  = null;       // sample rate (number)
+
+
+    let audioCtx;
+
+    let mediaRec;
+    let recChunks = [];
+    let userPronunciationBuffer = null;           // AudioBuffer
+    const refBufferCache = new Map();             // key -> AudioBuffer
 
     /* ====== Scoring tunables ====== */
     const SCORE_CFG = {
@@ -173,6 +200,28 @@
       {"bengali":"হল","english":"became","transliteration":"holo","audioFile":"holo.wav"}
     ];
 
+    async function loadRecorderWorklet(ctx){
+      // Define the processor source inline
+      const processorCode = `
+        class RecorderProcessor extends AudioWorkletProcessor {
+          process(inputs) {
+            const input = inputs[0];
+            if (input && input[0]) {
+              // Send Float32Array of the mono channel to main thread
+              this.port.postMessage(input[0]);
+            }
+            return true;
+          }
+        }
+        registerProcessor('recorder-processor', RecorderProcessor);
+      `;
+      const blob = new Blob([processorCode], { type: 'application/javascript' });
+      const url  = URL.createObjectURL(blob);
+      await ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+    }
+
+
     function undoLastStroke(){
       // If a stroke is in progress, cancel it
       if (isDrawing && currentPath) {
@@ -194,6 +243,231 @@
         showFeedbackTimed('Nothing to undo', 1200);
       }
     }
+
+    // ---- Reference audio helpers (add once, anywhere above checkPronunciationForCurrent) ----
+    function keyForCurrentAudio(){
+      if (selectedLetter)
+        return { key: `letter:${selectedLetter.audioFile}`, url: `audio/letters/${selectedLetter.audioFile}` };
+      if (selectedWord)
+        return { key: `word:${selectedWord.audioFile}`,   url: `audio/p21/${selectedWord.audioFile}` };
+      return null;
+    }
+
+    async function fetchDecodeAudio(url){
+      const ctx = ensureAudioContext();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to fetch: ${url}`);
+      const ab = await res.arrayBuffer();
+      // Safari-safe decode (callback form)
+      return await new Promise((resolve, reject) => ctx.decodeAudioData(ab, resolve, reject));
+    }
+
+    async function getReferenceBuffer(){
+      const meta = keyForCurrentAudio();
+      if (!meta) throw new Error('Open a letter or word first.');
+      if (refBufferCache.has(meta.key)) return refBufferCache.get(meta.key);
+      const buf = await fetchDecodeAudio(meta.url);
+      refBufferCache.set(meta.key, buf);
+      return buf;
+    }
+
+
+    function ensureAudioContext(){
+      if (!window.audioCtx) {
+        window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return window.audioCtx;
+    }
+
+    async function startPronunciation(){
+      const ctx = ensureAudioContext();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        showFeedbackTimed('Mic not supported in this browser.', 2500); return;
+      }
+      try {
+        // Start (or resume) audio
+        if (ctx.state === 'suspended') await ctx.resume();
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        msSource = ctx.createMediaStreamSource(mediaStream);
+
+        // Load worklet once
+        if (!ctx._recorderLoaded) {
+          await loadRecorderWorklet(ctx);
+          ctx._recorderLoaded = true;
+        }
+
+        workletNode = new AudioWorkletNode(ctx, 'recorder-processor');
+        pcmChunks = [];
+        workletNode.port.onmessage = (e) => {
+          // Copy the frame; don't keep the transferable reference
+          pcmChunks.push(new Float32Array(e.data));
+        };
+
+        // No need to hear yourself; do NOT connect to destination
+        msSource.connect(workletNode);
+        showFeedbackTimed('Recording… 🎙️', 1200);
+      } catch (err) {
+        console.error(err);
+        showFeedbackTimed('Microphone permission or setup failed.', 2500);
+      }
+    }
+
+    function stopPronunciation(){
+      try {
+        if (workletNode && msSource) {
+          msSource.disconnect();
+          workletNode.disconnect();
+        }
+      } catch(_) {}
+      try {
+        if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+      } catch(_) {}
+
+      // Merge PCM chunks into one Float32Array
+      let total = 0;
+      for (const c of pcmChunks) total += c.length;
+      const merged = new Float32Array(total);
+      let off = 0;
+      for (const c of pcmChunks) { merged.set(c, off); off += c.length; }
+
+      userPronunciationPCM = merged;
+      userPronunciationSR  = ensureAudioContext().sampleRate;
+
+      // Cleanup refs
+      workletNode = null; msSource = null; mediaStream = null; pcmChunks = [];
+
+      showFeedbackTimed('Recorded pronunciation ready ✅', 1500);
+    }
+
+
+    function bufferToMonoFloat32(buf){
+      const ch0 = buf.getChannelData(0);
+      if (buf.numberOfChannels === 1) return new Float32Array(ch0);
+      const ch1 = buf.getChannelData(1);
+      const out = new Float32Array(buf.length);
+      for (let i=0;i<buf.length;i++) out[i] = 0.5*(ch0[i] + ch1[i]);
+      return out;
+    }
+
+    function trimSilence(signal, sampleRate, rmsThresh = PRONUN_CFG.silenceRms){
+      const hop = 256;
+      const win = 512;
+      const n = signal.length;
+      const rms = [];
+      for (let i=0;i+win<=n;i+=hop){
+        let s=0;
+        for (let j=0;j<win;j++){ const v=signal[i+j]; s += v*v; }
+        rms.push(Math.sqrt(s/win));
+      }
+      const idxAbove = [];
+      for (let i=0;i<rms.length;i++) if (rms[i] >= rmsThresh) idxAbove.push(i);
+      if (!idxAbove.length) return signal.slice(0,0); // empty
+      const first = Math.max(0, idxAbove[0]*hop);
+      const last  = Math.min(n, (idxAbove[idxAbove.length-1]*hop) + win);
+      return signal.slice(first, last);
+    }
+
+    function mfccSeriesFromSignal(signal, sampleRate){
+      if (!window.Meyda) throw new Error('Meyda not loaded yet.');
+      const fs = PRONUN_CFG.frameSize;
+      const hop = PRONUN_CFG.hopSize;
+      const coeffs = PRONUN_CFG.mfccCount;
+      const series = [];
+      for (let i=0;i+fs<=signal.length;i+=hop){
+        const frame = signal.subarray(i, i+fs);
+        const mfcc = Meyda.extract('mfcc', frame, { sampleRate, bufferSize: fs, numberOfMFCCCoefficients: coeffs, melBands: 26 });
+        if (mfcc && mfcc.length) series.push(mfcc);
+      }
+      return series;
+    }
+
+    function zNormalizeSeries(series){
+      if (series.length === 0) return series;
+      const dim = series[0].length;
+      const mean = new Array(dim).fill(0);
+      const stdd = new Array(dim).fill(0);
+      for (const v of series) for (let j=0;j<dim;j++) mean[j] += v[j];
+      for (let j=0;j<dim;j++) mean[j] /= series.length;
+      for (const v of series) for (let j=0;j<dim;j++){ const d=v[j]-mean[j]; stdd[j] += d*d; }
+      for (let j=0;j<dim;j++) stdd[j] = Math.sqrt(stdd[j]/Math.max(1,series.length-1)) || 1;
+      return series.map(v => v.map((x,j)=>(x-mean[j])/stdd[j]));
+    }
+
+    function euclid(a,b){ let s=0; for (let i=0;i<a.length;i++){ const d=a[i]-b[i]; s+=d*d; } return Math.sqrt(s); }
+
+    function dtwDistance(seqA, seqB){
+      const n = seqA.length, m = seqB.length;
+      if (!n || !m) return Infinity;
+      const dp = Array(n+1).fill(null).map(()=>Array(m+1).fill(Infinity));
+      dp[0][0] = 0;
+      for (let i=1;i<=n;i++){
+        for (let j=1;j<=m;j++){
+          const cost = euclid(seqA[i-1], seqB[j-1]);
+          dp[i][j] = cost + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+        }
+      }
+      const pathLen = n + m; // rough normalization
+      return dp[n][m] / pathLen;
+    }
+
+    function scoreFromDTW(dtw){
+      // Map smaller DTW → higher score, clamp to [0,100]
+      const norm = dtw / PRONUN_CFG.distanceScale;
+      return Math.max(0, Math.min(100, Math.round(100*(1 - norm))));
+    }
+
+    function secondsFromSamples(n, sr){ return n / sr; }
+
+    async function checkPronunciationForCurrent(){
+      const fb = document.getElementById('pronunFeedback');
+      const show = (html)=>{ if (fb){ fb.innerHTML = html; fb.style.display='block'; } else { alert(html.replace(/<[^>]*>/g,'')); }};
+
+      if (!window.Meyda){ show('Please wait… loading audio analyzer.'); return; }
+      if (!selectedLetter && !selectedWord){ show('Open a letter or word first.'); return; }
+
+      // --- Reference (your shipped WAVs) ---
+      const refBuf = await getReferenceBuffer(); // your existing function
+      const refSR  = refBuf.sampleRate;
+      let ref = bufferToMonoFloat32(refBuf);
+
+      // --- User recording (PCM path) ---
+      if (!userPronunciationPCM || !userPronunciationPCM.length){
+        show('Record your voice first.'); return;
+      }
+      let usr = userPronunciationPCM;
+      const usrSR = userPronunciationSR || ensureAudioContext().sampleRate;
+
+      // Trim silence
+      ref = trimSilence(ref,  refSR, PRONUN_CFG.silenceRms);
+      usr = trimSilence(usr,  usrSR, PRONUN_CFG.silenceRms);
+
+      const minSec = PRONUN_CFG.minDurationSec || 0.40;
+      if ((usr.length / usrSR) < minSec){
+        show('Too short—try saying the full word a bit louder and slower.'); return;
+      }
+
+      // Extract MFCC (use each signal’s own SR)
+      const refMFCC = zNormalizeSeries(mfccSeriesFromSignal(ref, refSR));
+      const usrMFCC = zNormalizeSeries(mfccSeriesFromSignal(usr, usrSR));
+
+      // DTW distance → score
+      const dtw = dtwDistance(refMFCC, usrMFCC);
+      const score = isFinite(dtw) ? scoreFromDTW(dtw) : 0;
+
+      let tip = 'Great match! 🎉';
+      if (score < 80) tip = 'Nice! Try again a bit clearer.';
+      if (score < 60) tip = 'Getting there—slow down and say each sound.';
+      if (score < 40) tip = 'Listen to the sample and repeat slowly.';
+
+      show(`<div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-white">
+              <div class="text-lg font-bold">Pronunciation score: ${score}/100</div>
+              <div class="text-sm opacity-90">DTW=${dtw.toFixed(2)} · frames: you ${usrMFCC.length}, ref ${refMFCC.length}</div>
+              <div class="mt-2">${tip}</div>
+            </div>`);
+    }
+
+
 
     /************** Audio (unchanged) **************/
     function playBengaliAudio(audioFile, type='letter'){
@@ -844,6 +1118,22 @@
             <div class="bg-white/20 backdrop-blur-sm rounded-2xl p-6">
               <div class="text-center mb-4">
                 <h3 class="text-xl font-bold text-white mb-2">Trace the word</h3>
+                <!-- Pronunciation practice -->
+                <div class="text-center mb-4 mt-2">
+                  <div class="flex justify-center space-x-2">
+                    <button onclick="startPronunciation()" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-2 font-semibold transition-all">
+                      🎙️ Record
+                    </button>
+                    <button onclick="stopPronunciation()" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all">
+                      ⏹ Stop
+                    </button>
+                    <button onclick="checkPronunciationForCurrent()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold transition-all">
+                      ✅ Check pronunciation
+                    </button>
+                  </div>
+                  <div id="pronunFeedback" class="mt-2"></div>
+                </div>
+
                 <div class="flex justify-center space-x-4 mb-4">
                   <button onclick="clearCanvas(); saveCurrentTrace();" class="bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2 font-semibold transition-all flex items-center space-x-2" title="Clear (keeps saved copy)">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
