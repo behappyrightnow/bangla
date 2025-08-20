@@ -317,9 +317,31 @@
       clearCanvas(); render();
     }
 
-    /************** PDF Export **************/
+    // --- ADD this helper ---
+function makeTitleSVG(title, width = 1200, height = 140) {
+  // Use common Bengali-capable fonts if present; browser will shape correctly
+  const family = `'Noto Sans Bengali','Bangla Sangam MN','SolaimanLipi','Hind Siliguri','Mukta','Mukta Mahee',sans-serif`;
+  const safe = escapeXml(title);
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect width="100%" height="100%" fill="white"/>
+      <text x="40" y="${Math.round(height*0.65)}"
+            fill="#111" font-size="64" font-weight="700"
+            style="font-family:${family};">${safe}</text>
+    </svg>
+  `;
+}
+
+// --- ADD this helper ---
+async function titleToPngDataURL(title) {
+  const width = 1200, height = 140;
+  const svg = makeTitleSVG(title, width, height);
+  const dataURL = await svgToPngDataURL(svg, width, height);
+  return { dataURL, width, height };
+}
+
+    // --- REPLACE your downloadAllTracingsPDF with this ---
     async function downloadAllTracingsPDF(){
-      // Wait for jsPDF
       const jsPDF = window.jspdf?.jsPDF;
       if(!jsPDF){ alert('PDF library not loaded yet. Please try again in a moment.'); return; }
 
@@ -332,46 +354,47 @@
         ...bengaliWords.map(w => ({kind:'word',   label:w.bengali, display:w.bengali}))
       ];
 
-      let firstPagePlaced = false;
+      const margin = 40;
+      let placed = false;
 
       for(const it of items){
         const key = `trace:${it.kind}:${it.label}`;
         const raw = localStorage.getItem(key);
-        if(!raw) continue; // skip unsaved
+        if(!raw) continue;
 
-        // Build an SVG that overlays the paths on the faint glyph/word
+        // Title as image to preserve Bengali shaping
+        const title = `${it.kind === 'letter' ? 'Letter' : 'Word'}: ${it.label}`;
+        const { dataURL: tURL, width: tW, height: tH } = await titleToPngDataURL(title);
+
+        // Main preview (your existing overlay render → PNG)
         const { svgString, width, height } = makeSVGPreview(it.kind, it.display, raw);
-
-        // Convert SVG to image via blob URL, then draw into a canvas to get PNG data
         const imgDataURL = await svgToPngDataURL(svgString, width, height);
 
-        if(firstPagePlaced){
-          doc.addPage({orientation:'landscape'});
-        } else {
-          firstPagePlaced = true;
-        }
+        if(placed){ doc.addPage({orientation:'landscape'}); } else { placed = true; }
 
-        // Title
-        doc.setFont('helvetica','bold'); doc.setFontSize(18);
-        doc.text(`${it.kind === 'letter' ? 'Letter' : 'Word'}: ${it.label}`, 40, 40);
+        // place title (scale to page width minus margins)
+        const maxTW = pageW - margin*2;
+        const tScale = Math.min(1, maxTW / tW);
+        const drawTW = tW * tScale, drawTH = tH * tScale;
+        const titleX = (pageW - drawTW) / 2;
+        const titleY = margin;
+        doc.addImage(tURL, 'PNG', titleX, titleY, drawTW, drawTH);
 
-        // Place image centered & scaled
-        const margin = 40;
+        // place main image below title
+        const top = titleY + drawTH + 10;
         const maxW = pageW - margin*2;
-        const maxH = pageH - margin*2 - 20;
+        const maxH = pageH - top - margin;
         const scale = Math.min(maxW/width, maxH/height);
         const drawW = width*scale, drawH = height*scale;
-        const x = (pageW - drawW)/2, y = (pageH - drawH)/2 + 10;
+        const x = (pageW - drawW)/2;
+        const y = top + (maxH - drawH)/2;
         doc.addImage(imgDataURL, 'PNG', x, y, drawW, drawH);
       }
 
-      if(!firstPagePlaced){
-        alert('No saved tracings yet!');
-        return;
-      }
-
+      if(!placed){ alert('No saved tracings yet!'); return; }
       doc.save('bengali-tracings.pdf');
     }
+
 
     function makeSVGPreview(kind, displayText, rawSaved){
       // Target render size for PDF preview image
